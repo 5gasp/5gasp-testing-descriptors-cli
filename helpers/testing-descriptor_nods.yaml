@@ -1,0 +1,154 @@
+# @Author: Rafael Direito
+# @Date:   2022-07-22 11:17:54
+# @Last Modified by:   Kostis Trantzas
+# @Last Modified time: 2022-08-14 22:53:30
+
+test_info:
+  netapp_id: OdinS-NetApp 
+  network_service_id: vOBU
+  testbed_id: testbed_itav 
+  description: Validation tests for vOBU NetApp
+
+test_phases:
+  setup:
+    deployments:
+      - deployment_id: 1
+        name: xyz_d1
+        descriptor: xyz_vnf1_vnfd
+        id: none 
+        parameters: 
+          - key: ip_dest
+            value: 1.1.1.1 
+      - deployment_id: 2
+        name: xyz_vnf2
+        descriptor: xyz_vnf2_vnfd
+        id: none 
+        parameters:
+          - key: ip_source 
+            value: 2.2.2.2
+
+    testcases:
+    
+      - testcase_id: 1
+        type: developer-defined
+        scope: operational
+        name: api_request_test
+        description: Test if the Manager's API is ready
+        parameters:
+          - key: host
+            value: "{{management_VNF_IP}}" # Manager's Provider IP - id: vnf1, vnfd-id: management_vnfd, constituent-cpd-id: mgmt-vnf-eth0-ext
+          - key: port
+            value: 8070
+
+      - testcase_id: 2
+        type: developer-defined
+        scope: operational
+        name: api_request_test
+        description: Test if the Aggregator's API is ready
+        parameters:
+          - key: host
+            value: "{{aggregator_VNF_IP}}" # Aggregator's Provider IP - id: vnf3, vnfd-id: aggregator_vnfd, constituent-cpd-id: mgmt-vnf-eth0-ext
+          - key: port
+            value: 8090
+
+      - testcase_id: 3
+        type: developer-defined
+        scope: operational
+        name: database_ready_test
+        description: Check if the Aggregator's Database is Ready
+        parameters:
+          - key: entity_name
+            value: Aggregator
+          - key: host
+            value: "{{aggregator_VNF_IP}}" # Aggregator's Provider IP - id: vnf3, vnfd-id: aggregator_vnfd, constituent-cpd-id: mgmt-vnf-eth0-ext
+          - key: port
+            value: 8090
+          
+      - testcase_id: 4
+        type: developer-defined
+        scope: operational
+        name: database_ready_test
+        description: Check if the vOBU's Database is Ready
+        parameters:
+          - key: entity_name
+            value: vOBU
+          - key: host
+            value: "{{vOBU_VNF_IP}}" # vOBU's Provider IP - id: vnf2, vnfd-id: vOBU_vnfd, constituent-cpd-id: mgmt-vnf-eth0-ext
+          - key: port
+            value: 12341
+
+      - testcase_id: 5
+        type: developer-defined
+        scope: operational
+        name: obu_data_consumption_test
+        description: Check if the OBU's produced data can be consumed
+        parameters:
+          - key: desired_car_plate
+            value: 00AA00
+          - key: aggregator_host
+            value: "{{aggregator_VNF_IP}}" # Aggregator's Provider IP - id: vnf3, vnfd-id: aggregator_vnfd, constituent-cpd-id: mgmt-vnf-eth0-ext
+          - key: aggregator_port
+            value: 8090
+          - key: manager_host
+            value: "{{management_VNF_IP}}" # Manager's Provider IP - id: vnf1, vnfd-id: management_vnfd, constituent-cpd-id: mgmt-vnf-eth0-ext
+          - key: manager_port
+            value: 8070
+      
+      - testcase_id: 6
+        type: predefined
+        scope: security
+        name: open_ports
+        description: Check if the Aggregator's open ports are the ones desired
+        parameters:
+          - key: host
+            value: "{{aggregator_VNF_IP}}" # Aggregator's Provider IP - id: vnf3, vnfd-id: aggregator_vnfd, constituent-cpd-id: mgmt-vnf-eth0-ext
+          - key: expected_open_ports
+            value: 22/tcp,9042/tcp,9160/tcp,8090/tcp
+     
+      - testcase_id: 7
+        type: predefined
+        scope: security
+        name: open_ports
+        description: Check if the Manager's open ports are the ones desired
+        parameters:
+          - key: host
+            value: "{{management_VNF_IP}}" # Manager's Provider IP - id: vnf1, vnfd-id: management_vnfd, constituent-cpd-id: mgmt-vnf-eth0-ext
+          - key: expected_open_ports
+            value: "22/tcp,8070/tcp"
+
+      - testcase_id: 8
+        type: predefined
+        scope: security
+        name: open_ports
+        description: Check if the vOBU's open ports are the ones desired
+        parameters:
+          - key: host
+            value: "{{vOBU_VNF_IP}}" # vOBU's Provider IP - id: vnf2, vnfd-id: vOBU_vnfd, constituent-cpd-id: mgmt-vnf-eth0-ext
+          - key: expected_open_ports
+            value: "22/tcp,9042/tcp,9160/tcp,12341/tcp"
+     
+  execution:
+    - batch_id: 1
+      scope: operational
+      executions:
+      - execution_id: 1
+        name: api_request_test
+        testcase_ids: [1,2]    
+    - batch_id: 2
+      scope: operational
+      executions:
+      - execution_id: 1
+        name: database_ready_test
+        testcase_ids: [3,4]  
+    - batch_id: 3
+      scope: operational
+      executions:
+      - execution_id: 1
+        name: obu_data_consumption_test
+        testcase_ids: [5]  
+    - batch_id: 4
+      scope: security
+      executions:
+      - execution_id: 1
+        name: open_ports
+        testcase_ids: [6, 7, 8]  

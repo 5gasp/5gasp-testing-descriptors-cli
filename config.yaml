@@ -1,0 +1,4 @@
+tests:
+  - bandwidth
+  - transmission_speed
+  #- packet_loss

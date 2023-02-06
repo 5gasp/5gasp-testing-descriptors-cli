@@ -1,0 +1,159 @@
+test_info:
+  netapp_id: OdinS-NetApp
+  network_service_id: vOBU
+  testbed_id: testbed_itav
+  description: Validation tests for vOBU NetApp
+test_phases:
+  setup:
+    deployments:
+    - deployment_id: 1
+      name: xyz_d1
+      descriptor: xyz_vnf1_vnfd
+      id: none
+      parameters:
+      - key: ip_dest
+        value: 1.1.1.1
+    - deployment_id: 2
+      name: xyz_vnf2
+      descriptor: xyz_vnf2_vnfd
+      id: none
+      parameters:
+      - key: ip_source
+        value: 2.2.2.2
+    testcases:
+    - id: bandwidth
+      name: bandwidth
+      description: Tests the bandwidth between to VNFs. The results are in bits/sec
+      ftp_base_location: tests/bandwidth/
+      test_filename: testBandwidth.robot
+      test_type: Robot
+      test_variables:
+      - variable_name: host1_ip
+        description: IP of Host/VNF 1
+        mandatory: true
+        possible_options: []
+        type: str
+      - variable_name: host1_username
+        description: Login username for Host/VNF 1
+        mandatory: true
+        possible_options: []
+        type: str
+      - variable_name: host1_password
+        description: Login password for Host/VNF 1
+        mandatory: true
+        possible_options: []
+        type: str
+      - variable_name: host2_ip
+        description: IP of Host/VNF 2
+        mandatory: true
+        possible_options: []
+        type: str
+      - variable_name: host2_username
+        description: Login username for Host/VNF 2
+        mandatory: true
+        possible_options: []
+        type: str
+      - variable_name: host2_password
+        description: Login password for Host/VNF 2
+        mandatory: true
+        possible_options: []
+        type: str
+      - variable_name: comparator
+        description: Comparator to be used while validating the bandwidth
+        mandatory: true
+        possible_options:
+        - more_than
+        - more_or_equal_than
+        - less_than
+        - less_or_equal_than
+        type: str
+      - variable_name: threshold
+        description: Threshold in mbits per second
+        mandatory: true
+        possible_options: []
+        type: float
+    - id: transmission_speed
+      name: transmission speed
+      description: Tests the transmission speed between to VNFs. The results are in
+        ms
+      ftp_base_location: tests/transmission_speed/
+      test_filename: testTransmissionSpeed.robot
+      test_type: Robot
+      test_variables:
+      - variable_name: host1_ip
+        description: IP of Host/VNF 1
+        mandatory: true
+        possible_options: []
+        type: str
+      - variable_name: host1_username
+        description: Login username for Host/VNF 1
+        mandatory: true
+        possible_options: []
+        type: str
+      - variable_name: host1_password
+        description: Login password for Host/VNF 1
+        mandatory: true
+        possible_options: []
+        type: str
+      - variable_name: host2_ip
+        description: IP of Host/VNF 2
+        mandatory: true
+        possible_options: []
+        type: str
+      - variable_name: host2_username
+        description: Login username for Host/VNF 2
+        mandatory: true
+        possible_options: []
+        type: str
+      - variable_name: host2_password
+        description: Login password for Host/VNF 2
+        mandatory: true
+        possible_options: []
+        type: str
+      - variable_name: comparator
+        description: Comparator to be used while validating the transmission speed
+        mandatory: true
+        possible_options:
+        - more_than
+        - more_or_equal_than
+        - less_than
+        - less_or_equal_than
+        type: str
+      - variable_name: threshold
+        description: Threshold in milliseconds
+        mandatory: true
+        possible_options: []
+        type: float
+  execution:
+  - batch_id: 1
+    scope: operational
+    executions:
+    - execution_id: 1
+      name: api_request_test
+      testcase_ids:
+      - 1
+      - 2
+  - batch_id: 2
+    scope: operational
+    executions:
+    - execution_id: 1
+      name: database_ready_test
+      testcase_ids:
+      - 3
+      - 4
+  - batch_id: 3
+    scope: operational
+    executions:
+    - execution_id: 1
+      name: obu_data_consumption_test
+      testcase_ids:
+      - 5
+  - batch_id: 4
+    scope: security
+    executions:
+    - execution_id: 1
+      name: open_ports
+      testcase_ids:
+      - 6
+      - 7
+      - 8
