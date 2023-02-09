@@ -1,2 +1,2 @@
 typer[all]==0.7.0
-PyYAML==6.0
+ruamel.yaml==0.17.21

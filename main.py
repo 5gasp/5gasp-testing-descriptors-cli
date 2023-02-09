@@ -2,14 +2,18 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-02-07 18:07:48
+# @Last Modified time: 2023-02-09 15:37:36
 
 import typer
-import yaml
+from ruamel.yaml import YAML
+from ruamel.yaml.error import YAMLError
 from pprint import pprint
 
 app = typer.Typer()
 state = {"verbose": False}
+
+yaml = YAML(typ = "safe") # safe mode - loads a document without resolving unknown tags
+yaml.default_flow_style = False
 
 
 @app.command()
@@ -24,8 +28,8 @@ def create_tests(
 
     with open(config_file, "r") as stream:
         try:
-            intended_tests = yaml.safe_load(stream) # dict
-        except yaml.YAMLError as exc:
+            intended_tests = yaml.load(stream) # dict
+        except YAMLError as exc:
             print(exc)
 
     if state["verbose"]: print("Configuration file read!")
@@ -65,12 +69,8 @@ def create_tests(
 
     with open("testing-descriptor.yaml", "w") as file:
         try:
-            t = yaml.safe_dump(
-                tests, 
-                file, 
-                sort_keys = False, 
-                default_flow_style = False,)
-        except yaml.YAMLError as exc:
+            t = yaml.dump(tests, file)
+        except YAMLError as exc:
             print(exc)
 
     if state["verbose"]: print("Tests file created!")
@@ -82,8 +82,8 @@ def read_tests_info():
     '''
     with open("helpers/test_information.yaml", "r") as stream:
         try:
-            test_information = yaml.safe_load(stream)
-        except yaml.YAMLError as exc:
+            test_information = yaml.load(stream)
+        except YAMLError as exc:
             print(exc)
 
     return test_information
@@ -95,8 +95,8 @@ def read_testing_descriptors():
     '''
     with open("helpers/testing-descriptor_nods.yaml", "r") as stream:
         try:
-            testing_descriptor_nods = yaml.safe_load(stream)
-        except yaml.YAMLError as exc:
+            testing_descriptor_nods = yaml.load(stream)
+        except YAMLError as exc:
             print(exc)
     
     return testing_descriptor_nods
