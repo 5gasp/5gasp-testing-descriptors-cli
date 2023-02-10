@@ -2,19 +2,25 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-02-09 15:37:36
+# @Last Modified time: 2023-02-10 16:57:43
 
+from pprint import pprint
 import typer
+import sys
 from ruamel.yaml import YAML
 from ruamel.yaml.error import YAMLError
-from pprint import pprint
+# YAML commentary
+from ruamel.yaml.comments import \
+    CommentedMap as OrderedDict, \
+    CommentedSeq as OrderedList
+
+from testcase import Testcase
 
 app = typer.Typer()
 state = {"verbose": False}
 
 yaml = YAML(typ = "safe") # safe mode - loads a document without resolving unknown tags
 yaml.default_flow_style = False
-
 
 @app.command()
 def create_tests(
@@ -48,22 +54,24 @@ def create_tests(
     intended_test_types = [type for type in test_types if type in intended_tests['tests']]
     
     # add intended test to testcases
-    [tests['test_phases']['setup']['testcases'].append(
-            {
-                'testcase_id': i,
-                'type': test_types[test]['test_type'],
-                'scope': "",
-                'name': test_types[test]['name'],
-                'description': test_types[test]['description'],
-                'parameters': [
-                    {
-                        'key': key['variable_name'],
-                        'value': "# user-provided"
-                    } for key in test_types[test]['test_variables']
-                ],
-            }
-        ) for i, test in enumerate(intended_test_types, 1)
-    ]
+    for i, test in enumerate(intended_test_types, 1):
+        test = test_types[test]
+        
+        testcase = Testcase(
+                        id = i,
+                        type = test['test_type'],
+                        name = test['name'],
+                        description = test['description'],
+                    )
+
+        testcase.create_testcase()
+
+        # add parameters to testcase
+        [testcase.add_parameter({'key': variable['variable_name'], 'value': ""}) 
+            for variable in test['test_variables']]
+
+        # add testcase to tests
+        tests['test_phases']['setup']['testcases'].append(testcase.testcase)
 
     if state["verbose"]: print("Creating tests file...")
 
@@ -73,8 +81,29 @@ def create_tests(
         except YAMLError as exc:
             print(exc)
 
+    #add_comments()
+
     if state["verbose"]: print("Tests file created!")
     
+def add_comments():
+    with open("testing-descriptor.yaml", "r+") as stream:
+        try:
+            content = yaml.load(stream)
+        except YAMLError as exc:
+            print(exc)
+
+        content = OrderedDict(content)
+        for testcase in content['test_phases']['setup']['testcases']:
+            for parameter in testcase['parameters']:
+                print(parameter)
+                parameter = OrderedDict(parameter)
+                parameter.yaml_add_eol_comment("comment", key = "value")
+        
+        try:
+            content = yaml.dump(content, stream)
+        except YAMLError as exc:
+            print(exc)
+
 
 def read_tests_info():
     '''
