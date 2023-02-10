@@ -2,11 +2,15 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-02-10 16:57:43
+# @Last Modified time: 2023-02-10 18:11:24
 
 from pprint import pprint
+from typing import Optional
+
+# Typer
 import typer
-import sys
+
+#ruamel.yaml
 from ruamel.yaml import YAML
 from ruamel.yaml.error import YAMLError
 # YAML commentary
@@ -25,7 +29,9 @@ yaml.default_flow_style = False
 @app.command()
 def create_tests(
     test_description: str,
-    config_file: str = typer.Option(...)
+    config_file: str = typer.Option(..., help = "Name of the config file \
+                                        containing the desired test' names"),
+    output_filename: str = typer.Option("testing-descriptor.yaml")
     ):
     '''
     Create tests descriptor from a given config.yaml containing the intended tests
@@ -75,7 +81,7 @@ def create_tests(
 
     if state["verbose"]: print("Creating tests file...")
 
-    with open("testing-descriptor.yaml", "w") as file:
+    with open(output_filename, "w") as file:
         try:
             t = yaml.dump(tests, file)
         except YAMLError as exc:
@@ -109,7 +115,7 @@ def read_tests_info():
     '''
     Read tests information from test_information.yaml
     '''
-    with open("helpers/test_information.yaml", "r") as stream:
+    with open("../helpers/test_information.yaml", "r") as stream:
         try:
             test_information = yaml.load(stream)
         except YAMLError as exc:
@@ -122,7 +128,7 @@ def read_testing_descriptors():
     '''
     Read testing descriptors from testing_descriptor_nods.yaml
     '''
-    with open("helpers/testing-descriptor_nods.yaml", "r") as stream:
+    with open("../helpers/testing-descriptor_nods.yaml", "r") as stream:
         try:
             testing_descriptor_nods = yaml.load(stream)
         except YAMLError as exc:
