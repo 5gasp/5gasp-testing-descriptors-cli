@@ -2,13 +2,13 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-02-10 18:11:24
+# @Last Modified time: 2023-02-13 17:16:35
 
 from pprint import pprint
-from typing import Optional
 
 # Typer
 import typer
+from typing import Tuple
 
 #ruamel.yaml
 from ruamel.yaml import YAML
@@ -19,6 +19,7 @@ from ruamel.yaml.comments import \
     CommentedSeq as OrderedList
 
 from testcase import Testcase
+from execution import Execution
 
 app = typer.Typer()
 state = {"verbose": False}
@@ -28,10 +29,13 @@ yaml.default_flow_style = False
 
 @app.command()
 def create_tests(
-    test_description: str,
-    config_file: str = typer.Option(..., help = "Name of the config file \
+    config_file: str = typer.Option(None, 
+                                        help = "Name of the config file \
                                         containing the desired test' names"),
-    output_filename: str = typer.Option("testing-descriptor.yaml")
+    output_filename: str = typer.Option("testing-descriptor.yaml", 
+                                        help = "Output filename"),
+    clear_sections: Tuple[str, str] = typer.Option(("testcases", "execution"), 
+                                        help = "Sections to be cleared")
     ):
     '''
     Create tests descriptor from a given config.yaml containing the intended tests
@@ -46,6 +50,23 @@ def create_tests(
 
     if state["verbose"]: print("Configuration file read!")
 
+    descriptor = reset_sections(intended_tests, clear_sections)
+
+    if state["verbose"]: print("Creating tests file...")
+
+    with open(output_filename, "w") as file:
+        try:
+            t = yaml.dump(descriptor, file)
+        except YAMLError as exc:
+            print(exc)
+
+    if state["verbose"]: print("Tests file created!")
+
+
+def reset_sections(intended_tests: dict(), sections: tuple()):
+    '''
+    Reset user-given sections to later be filled
+    '''
     # tests info from test_information.yaml
     tests_info = read_tests_info()
 
@@ -55,41 +76,46 @@ def create_tests(
     # existing tests
     test_types = tests_info['tests']['testbed_itav']
 
-    tests['test_phases']['setup']['testcases'].clear()
-    
-    intended_test_types = [type for type in test_types if type in intended_tests['tests']]
-    
-    # add intended test to testcases
-    for i, test in enumerate(intended_test_types, 1):
-        test = test_types[test]
+    if "testcases" in sections:
+
+        tests['test_phases']['setup']['testcases'].clear()
         
-        testcase = Testcase(
-                        id = i,
-                        type = test['test_type'],
-                        name = test['name'],
-                        description = test['description'],
-                    )
+        intended_test_types = [type for type in test_types if type in intended_tests['tests']]
+        
+        # add intended test to testcases
+        for i, test in enumerate(intended_test_types, 1):
+            test = test_types[test]
+            
+            testcase = Testcase(
+                            id = i,
+                            type = test['test_type'],
+                            name = test['name'],
+                            description = test['description'],
+                        )
 
-        testcase.create_testcase()
+            testcase.create_testcase()
 
-        # add parameters to testcase
-        [testcase.add_parameter({'key': variable['variable_name'], 'value': ""}) 
-            for variable in test['test_variables']]
+            # add parameters to testcase
+            [testcase.add_parameter({'key': variable['variable_name'], 'value': ""}) 
+                for variable in test['test_variables']]
 
-        # add testcase to tests
-        tests['test_phases']['setup']['testcases'].append(testcase.testcase)
+            # add testcase to tests
+            tests['test_phases']['setup']['testcases'].append(testcase.testcase)
+        
+    if "execution" in sections:
+        
+        tests['test_phases']['execution'].clear()
 
-    if state["verbose"]: print("Creating tests file...")
+        execution = Execution(1, "", [1])
+        
+        execution.create_execution()
 
-    with open(output_filename, "w") as file:
-        try:
-            t = yaml.dump(tests, file)
-        except YAMLError as exc:
-            print(exc)
+        tests['test_phases']['execution'] = [
+                {"batch_id": 1,"executions": [execution.execution]}
+        ]
 
-    #add_comments()
+    return tests
 
-    if state["verbose"]: print("Tests file created!")
     
 def add_comments():
     with open("testing-descriptor.yaml", "r+") as stream:
