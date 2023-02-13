@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-02-13 17:16:35
+# @Last Modified time: 2023-02-13 17:29:35
 
 from pprint import pprint
 
@@ -13,10 +13,6 @@ from typing import Tuple
 #ruamel.yaml
 from ruamel.yaml import YAML
 from ruamel.yaml.error import YAMLError
-# YAML commentary
-from ruamel.yaml.comments import \
-    CommentedMap as OrderedDict, \
-    CommentedSeq as OrderedList
 
 from testcase import Testcase
 from execution import Execution
@@ -34,8 +30,10 @@ def create_tests(
                                         containing the desired test' names"),
     output_filename: str = typer.Option("testing-descriptor.yaml", 
                                         help = "Output filename"),
-    clear_sections: Tuple[str, str] = typer.Option(("testcases", "execution"), 
-                                        help = "Sections to be cleared")
+    clear_testcases: bool = typer.Option(False, 
+                                        help = "Clear testcases"),
+    clear_executions: bool = typer.Option(False, 
+                                        help = "Clear executions")
     ):
     '''
     Create tests descriptor from a given config.yaml containing the intended tests
@@ -50,7 +48,7 @@ def create_tests(
 
     if state["verbose"]: print("Configuration file read!")
 
-    descriptor = reset_sections(intended_tests, clear_sections)
+    descriptor = reset_sections(intended_tests, clear_testcases, clear_executions)
 
     if state["verbose"]: print("Creating tests file...")
 
@@ -63,7 +61,11 @@ def create_tests(
     if state["verbose"]: print("Tests file created!")
 
 
-def reset_sections(intended_tests: dict(), sections: tuple()):
+def reset_sections(
+        intended_tests: dict(), 
+        clear_testcases: bool, 
+        clear_executions: bool
+    ):
     '''
     Reset user-given sections to later be filled
     '''
@@ -76,11 +78,12 @@ def reset_sections(intended_tests: dict(), sections: tuple()):
     # existing tests
     test_types = tests_info['tests']['testbed_itav']
 
-    if "testcases" in sections:
+    if clear_testcases:
 
         tests['test_phases']['setup']['testcases'].clear()
         
-        intended_test_types = [type for type in test_types if type in intended_tests['tests']]
+        intended_test_types = [type for type in test_types 
+                                if type in intended_tests['tests']]
         
         # add intended test to testcases
         for i, test in enumerate(intended_test_types, 1):
@@ -102,7 +105,7 @@ def reset_sections(intended_tests: dict(), sections: tuple()):
             # add testcase to tests
             tests['test_phases']['setup']['testcases'].append(testcase.testcase)
         
-    if "execution" in sections:
+    if clear_executions:
         
         tests['test_phases']['execution'].clear()
 
@@ -115,26 +118,6 @@ def reset_sections(intended_tests: dict(), sections: tuple()):
         ]
 
     return tests
-
-    
-def add_comments():
-    with open("testing-descriptor.yaml", "r+") as stream:
-        try:
-            content = yaml.load(stream)
-        except YAMLError as exc:
-            print(exc)
-
-        content = OrderedDict(content)
-        for testcase in content['test_phases']['setup']['testcases']:
-            for parameter in testcase['parameters']:
-                print(parameter)
-                parameter = OrderedDict(parameter)
-                parameter.yaml_add_eol_comment("comment", key = "value")
-        
-        try:
-            content = yaml.dump(content, stream)
-        except YAMLError as exc:
-            print(exc)
 
 
 def read_tests_info():
