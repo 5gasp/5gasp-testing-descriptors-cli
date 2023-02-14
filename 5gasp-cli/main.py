@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-02-13 17:29:35
+# @Last Modified time: 2023-02-14 16:41:48
 
 from pprint import pprint
 
@@ -30,8 +30,6 @@ def create_tests(
                                         containing the desired test' names"),
     output_filename: str = typer.Option("testing-descriptor.yaml", 
                                         help = "Output filename"),
-    clear_testcases: bool = typer.Option(False, 
-                                        help = "Clear testcases"),
     clear_executions: bool = typer.Option(False, 
                                         help = "Clear executions")
     ):
@@ -48,7 +46,7 @@ def create_tests(
 
     if state["verbose"]: print("Configuration file read!")
 
-    descriptor = reset_sections(intended_tests, clear_testcases, clear_executions)
+    descriptor = reset_sections(intended_tests, clear_executions)
 
     if state["verbose"]: print("Creating tests file...")
 
@@ -63,7 +61,6 @@ def create_tests(
 
 def reset_sections(
         intended_tests: dict(), 
-        clear_testcases: bool, 
         clear_executions: bool
     ):
     '''
@@ -78,32 +75,30 @@ def reset_sections(
     # existing tests
     test_types = tests_info['tests']['testbed_itav']
 
-    if clear_testcases:
-
-        tests['test_phases']['setup']['testcases'].clear()
+    tests['test_phases']['setup']['testcases'].clear()
+    
+    intended_test_types = [type for type in test_types 
+                            if type in intended_tests['tests']]
+    
+    # add intended test to testcases
+    for i, test in enumerate(intended_test_types, 1):
+        test = test_types[test]
         
-        intended_test_types = [type for type in test_types 
-                                if type in intended_tests['tests']]
-        
-        # add intended test to testcases
-        for i, test in enumerate(intended_test_types, 1):
-            test = test_types[test]
-            
-            testcase = Testcase(
-                            id = i,
-                            type = test['test_type'],
-                            name = test['name'],
-                            description = test['description'],
-                        )
+        testcase = Testcase(
+                        id = i,
+                        type = test['test_type'],
+                        name = test['name'],
+                        description = test['description'],
+                    )
 
-            testcase.create_testcase()
+        testcase.create_testcase()
 
-            # add parameters to testcase
-            [testcase.add_parameter({'key': variable['variable_name'], 'value': ""}) 
-                for variable in test['test_variables']]
+        # add parameters to testcase
+        [testcase.add_parameter({'key': variable['variable_name'], 'value': ""}) 
+            for variable in test['test_variables']]
 
-            # add testcase to tests
-            tests['test_phases']['setup']['testcases'].append(testcase.testcase)
+        # add testcase to tests
+        tests['test_phases']['setup']['testcases'].append(testcase.testcase)
         
     if clear_executions:
         
