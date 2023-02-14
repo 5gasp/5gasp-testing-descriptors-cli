@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-13 16:46:59
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-02-13 17:08:48
+# @Last Modified time: 2023-02-14 17:18:21
 
 class Execution:
     '''
@@ -14,7 +14,7 @@ class Execution:
         self.id = id
         self.name = name
         self.testcase_ids = testcase_ids
-        self._execution = dict()
+        self._execution = {}
     
     def create_execution(self):
         '''
@@ -34,4 +34,8 @@ class Execution:
 
     @property # getter
     def execution(self):
+        '''
+        Get execution
+        '''
         return self._execution
+        

@@ -2,13 +2,10 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-02-14 16:41:48
-
-from pprint import pprint
+# @Last Modified time: 2023-02-14 17:12:37
 
 # Typer
 import typer
-from typing import Tuple
 
 #ruamel.yaml
 from ruamel.yaml import YAML
@@ -36,7 +33,8 @@ def create_tests(
     '''
     Create tests descriptor from a given config.yaml containing the intended tests
     '''
-    if state["verbose"]: print("Reading configuration file...")
+    if state["verbose"]: 
+        print("Reading configuration file...")
 
     with open(config_file, "r") as stream:
         try:
@@ -44,11 +42,13 @@ def create_tests(
         except YAMLError as exc:
             print(exc)
 
-    if state["verbose"]: print("Configuration file read!")
+    if state["verbose"]: 
+        print("Configuration file read!")
 
     descriptor = reset_sections(intended_tests, clear_executions)
 
-    if state["verbose"]: print("Creating tests file...")
+    if state["verbose"]: 
+        print("Creating tests file...")
 
     with open(output_filename, "w") as file:
         try:
@@ -56,13 +56,11 @@ def create_tests(
         except YAMLError as exc:
             print(exc)
 
-    if state["verbose"]: print("Tests file created!")
+    if state["verbose"]:
+        print("Tests file created!")
 
 
-def reset_sections(
-        intended_tests: dict(), 
-        clear_executions: bool
-    ):
+def reset_sections(intended_tests: dict(), clear_executions: bool):
     '''
     Reset user-given sections to later be filled
     '''
@@ -94,14 +92,14 @@ def reset_sections(
         testcase.create_testcase()
 
         # add parameters to testcase
-        [testcase.add_parameter({'key': variable['variable_name'], 'value': ""}) 
-            for variable in test['test_variables']]
+        for variable in test['test_variables']:
+            testcase.add_parameter({'key': variable['variable_name'], 'value': ""})
 
         # add testcase to tests
         tests['test_phases']['setup']['testcases'].append(testcase.testcase)
         
     if clear_executions:
-        
+      
         tests['test_phases']['execution'].clear()
 
         execution = Execution(1, "", [1])
@@ -137,9 +135,9 @@ def read_testing_descriptors():
             testing_descriptor_nods = yaml.load(stream)
         except YAMLError as exc:
             print(exc)
-    
+
     return testing_descriptor_nods
-        
+     
 
 @app.callback()
 def main(verbose: bool = False):
