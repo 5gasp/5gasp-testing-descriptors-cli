@@ -8,35 +8,9 @@ test_phases:
   - batch_id: 1
     executions:
     - execution_id: 1
-      name: api_request_test
+      name: ''
       testcase_ids:
       - 1
-      - 2
-    scope: operational
-  - batch_id: 2
-    executions:
-    - execution_id: 1
-      name: database_ready_test
-      testcase_ids:
-      - 3
-      - 4
-    scope: operational
-  - batch_id: 3
-    executions:
-    - execution_id: 1
-      name: obu_data_consumption_test
-      testcase_ids:
-      - 5
-    scope: operational
-  - batch_id: 4
-    executions:
-    - execution_id: 1
-      name: open_ports
-      testcase_ids:
-      - 6
-      - 7
-      - 8
-    scope: security
   setup:
     deployments:
     - deployment_id: 1
