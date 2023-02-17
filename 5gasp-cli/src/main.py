@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-02-16 15:14:09
+# @Last Modified time: 2023-02-17 18:52:11
 
 # Typer
 import typer
@@ -122,7 +122,7 @@ def read_tests_info():
     Read tests information from test_information.yaml
     '''
     try:
-        with open("../helpers/test_information.yaml", "r") as stream:
+        with open("../../helpers/test_information.yaml", "r") as stream:
             try:
                 test_information = yaml.load(stream)
             except YAMLError as exc:
@@ -139,7 +139,7 @@ def read_testing_descriptors():
     Read testing descriptors from testing_descriptor_nods.yaml
     '''
     try:
-        with open("../helpers/testing-descriptor_nods.yaml", "r") as stream:
+        with open("../../helpers/testing-descriptor_nods.yaml", "r") as stream:
             try:
                 testing_descriptor_nods = yaml.load(stream)
             except YAMLError as exc:
