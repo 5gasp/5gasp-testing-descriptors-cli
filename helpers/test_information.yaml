@@ -1,7 +1,7 @@
 # @Author: Rafael Direito
 # @Date:   01-06-2021 17:43:43
 # @Last Modified by:   Rafael Direito
-# @Last Modified time: 2023-02-18 17:57:10
+# @Last Modified time: 2023-02-18 18:00:53
 ---
 tests:
   testbed_itav:
@@ -215,7 +215,6 @@ tests:
         type: str
         injected_by_nods: true
         example: 192.158.1.38
-        validation_regex: "^(\d{1,3}\.){3}\d{1,3}$"
       - variable_name: expected_open_port
         description: Port that should be opened
         mandatory: true
