@@ -2,7 +2,11 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-02-14 17:12:37
+# @Last Modified time: 2023-02-18 18:24:15
+
+# Python
+from typing import List, Optional
+import pprint
 
 # Typer
 import typer
@@ -13,12 +17,36 @@ from ruamel.yaml.error import YAMLError
 
 from testcase import Testcase
 from execution import Execution
+from parser import InjectedTagsParser
 
-app = typer.Typer()
+app = typer.Typer(pretty_exceptions_show_locals = False)
 state = {"verbose": False}
 
 yaml = YAML(typ = "safe") # safe mode - loads a document without resolving unknown tags
 yaml.default_flow_style = False
+
+@app.command()
+def nsd_validator(
+    network_service_descriptor: Optional[List[str]] = typer.Option(None)
+    ):
+    '''
+    Network Service Descriptor validator
+    '''
+    if not network_service_descriptor:
+        nsd = input("Are you sure you want to continue without providing a NSD? [y/n]: ")
+        if nsd == "n": 
+            return
+        
+    if network_service_descriptor:
+        for descriptor in network_service_descriptor:
+            parser = InjectedTagsParser(descriptor)
+            parser.parse_descriptor()
+
+            interfaces = parser.interfaces
+
+            print("\nThe following interfaces were generated:")
+            for interface in interfaces:
+                print(interface)
 
 @app.command()
 def create_tests(
