@@ -1,0 +1,25 @@
+nsd:
+  nsd:
+  - description: Simple NS with a single VNF and a single VL
+    df:
+    - id: default-df
+      vnf-profile:
+      - id: affinity-basic-1
+        virtual-link-connectivity:
+        - constituent-cpd-id:
+          - constituent-base-element-id: affinity-basic-1
+            constituent-cpd-id: vnf-cp0-ext-1
+          virtual-link-profile-id: mgmtnet
+        - constituent-cpd-id:
+          - constituent-base-element-id: affinity-basic-1
+            constituent-cpd-id: vnf-cp0-ext-2
+          virtual-link-profile-id: mgmtnet
+        vnfd-id: affinity_basic-vnf
+    id: affinity_basic-ns
+    name: affinity_basic-ns
+    version: 1.0
+    virtual-link-desc:
+    - id: mgmtnet
+      mgmt-network: true
+    vnfd-id:
+    - affinity_basic-vnf

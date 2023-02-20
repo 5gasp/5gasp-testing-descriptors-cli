@@ -2,7 +2,10 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-02-18 18:24:15
+# @Last Modified time: 2023-02-20 15:54:02
+
+# OS
+import sys
 
 # Python
 from typing import List, Optional
@@ -15,9 +18,9 @@ import typer
 from ruamel.yaml import YAML
 from ruamel.yaml.error import YAMLError
 
-from testcase import Testcase
-from execution import Execution
-from parser import InjectedTagsParser
+from Testcase.testcase import Testcase
+from Execution.execution import Execution
+from Parser.parser import InjectedTagsParser
 
 app = typer.Typer(pretty_exceptions_show_locals = False)
 state = {"verbose": False}
@@ -26,11 +29,17 @@ yaml = YAML(typ = "safe") # safe mode - loads a document without resolving unkno
 yaml.default_flow_style = False
 
 @app.command()
-def nsd_validator(
+def infer_tags_from_nsd(
     network_service_descriptor: Optional[List[str]] = typer.Option(None)
     ):
     '''
-    Network Service Descriptor validator
+    Infer tags from given NSD(s)
+
+    Parameters
+    ----------
+    network_service_descriptor : list[str] (optional)
+        Network Service Descriptor to be used to infer tags 
+        (this option can be called multiple times)
     '''
     if not network_service_descriptor:
         nsd = input("Are you sure you want to continue without providing a NSD? [y/n]: ")
@@ -44,7 +53,7 @@ def nsd_validator(
 
             interfaces = parser.interfaces
 
-            print("\nThe following interfaces were generated:")
+            print("\nThe following tags were generated:")
             for interface in interfaces:
                 print(interface)
 
@@ -60,15 +69,35 @@ def create_tests(
     ):
     '''
     Create tests descriptor from a given config.yaml containing the intended tests
+    
+    Parameters
+    ----------
+    config_file : str (optional)
+        A string representing the name of the config file containing 
+        the names of the intended tests.
+    output_filename : str (optional)
+        A string representing the name of the output file for the
+        test descriptor.
+    clear_executions : bool (optional)
+        A boolean flag indicating whether to clear previous test
+        execution history from the test descriptor before creating the new descriptor.
+    
+    Returns
+    -------
+    None
     '''
     if state["verbose"]: 
         print("Reading configuration file...")
 
-    with open(config_file, "r") as stream:
-        try:
-            intended_tests = yaml.load(stream) # dict
-        except YAMLError as exc:
-            print(exc)
+    try:
+        with open(config_file, "r") as stream:
+            try:
+                intended_tests = yaml.load(stream) # dict
+            except YAMLError as exc:
+                print(exc)
+    except FileNotFoundError as e:
+        print(f"Error! File {config_file} not found!")
+        return sys.exit(0)
 
     if state["verbose"]: 
         print("Configuration file read!")
@@ -76,21 +105,33 @@ def create_tests(
     descriptor = reset_sections(intended_tests, clear_executions)
 
     if state["verbose"]: 
-        print("Creating tests file...")
+        print("Creating the descriptor...")
 
-    with open(output_filename, "w") as file:
+    with open("../../" + output_filename, "w") as file:
         try:
-            t = yaml.dump(descriptor, file)
+            yaml.dump(descriptor, file)
         except YAMLError as exc:
             print(exc)
 
     if state["verbose"]:
-        print("Tests file created!")
+        print("Descriptor generated, check it at the descriptor folder")
 
 
 def reset_sections(intended_tests: dict(), clear_executions: bool):
     '''
-    Reset user-given sections to later be filled
+    Reset user-given sections to later be filled by the user
+
+    Parameters
+    ----------
+    intended_tests : dict
+        Dictionary containing tests information from test_information.yaml.
+    clear_executions : bool
+        Boolean for whether to clear existing executions.
+    
+    Returns
+    -------
+    tests: dict
+        Updated testing descriptors.
     '''
     # tests info from test_information.yaml
     tests_info = read_tests_info()
@@ -144,12 +185,21 @@ def reset_sections(intended_tests: dict(), clear_executions: bool):
 def read_tests_info():
     '''
     Read tests information from test_information.yaml
+
+    Returns
+    -------
+    test_information : dict
+        Dictionary containing tests information from test_information.yaml.
     '''
-    with open("../helpers/test_information.yaml", "r") as stream:
-        try:
-            test_information = yaml.load(stream)
-        except YAMLError as exc:
-            print(exc)
+    try:
+        with open("../../files/test_information.yaml", "r") as stream:
+            try:
+                test_information = yaml.load(stream)
+            except YAMLError as exc:
+                print(exc)
+    except FileNotFoundError as e:
+        print(f"Error! File test_information.yaml not found!")
+        return sys.exit(0)
 
     return test_information
 
@@ -157,12 +207,21 @@ def read_tests_info():
 def read_testing_descriptors():
     '''
     Read testing descriptors from testing_descriptor_nods.yaml
+    
+    Returns
+    -------
+    testing_descriptor_nods : dict
+        Dictionary containing the testing descriptors.
     '''
-    with open("../helpers/testing-descriptor_nods.yaml", "r") as stream:
-        try:
-            testing_descriptor_nods = yaml.load(stream)
-        except YAMLError as exc:
-            print(exc)
+    try:
+        with open("../../files/testing-descriptor_nods.yaml", "r") as stream:
+            try:
+                testing_descriptor_nods = yaml.load(stream)
+            except YAMLError as exc:
+                print(exc)
+    except FileNotFoundError as e:
+        print(f"Error! File testing-descriptor_nods.yaml not found!")
+        return sys.exit(0)
 
     return testing_descriptor_nods
      

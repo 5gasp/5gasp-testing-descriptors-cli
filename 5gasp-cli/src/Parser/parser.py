@@ -2,7 +2,10 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-18 15:26:20
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-02-18 18:23:24
+# @Last Modified time: 2023-02-20 15:53:20
+
+# OS
+import sys
 
 # Python
 from pprint import pprint
@@ -26,14 +29,14 @@ class InjectedTagsParser:
 
     def parse_descriptor(self):
         '''
-        Returns all the interfaces from the given descriptor
+        Retrieves all the tags from the given descriptor
         '''
         try:
             with open(self.filename, "r") as file:
                 descriptor = yaml.load(file)
         except FileNotFoundError as e:
             print(f"Error! File {self.filename} not found!")
-            return
+            return sys.exit(0)
 
         for network_service in descriptor['nsd']['nsd']:
             ns_id = network_service['id']
