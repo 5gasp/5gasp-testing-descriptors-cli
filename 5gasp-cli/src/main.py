@@ -2,10 +2,11 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-02-20 15:54:02
+# @Last Modified time: 2023-02-21 20:39:49
 
 # OS
 import sys
+import os
 
 # Python
 from typing import List, Optional
@@ -29,35 +30,6 @@ yaml = YAML(typ = "safe") # safe mode - loads a document without resolving unkno
 yaml.default_flow_style = False
 
 @app.command()
-def infer_tags_from_nsd(
-    network_service_descriptor: Optional[List[str]] = typer.Option(None)
-    ):
-    '''
-    Infer tags from given NSD(s)
-
-    Parameters
-    ----------
-    network_service_descriptor : list[str] (optional)
-        Network Service Descriptor to be used to infer tags 
-        (this option can be called multiple times)
-    '''
-    if not network_service_descriptor:
-        nsd = input("Are you sure you want to continue without providing a NSD? [y/n]: ")
-        if nsd == "n": 
-            return
-        
-    if network_service_descriptor:
-        for descriptor in network_service_descriptor:
-            parser = InjectedTagsParser(descriptor)
-            parser.parse_descriptor()
-
-            interfaces = parser.interfaces
-
-            print("\nThe following tags were generated:")
-            for interface in interfaces:
-                print(interface)
-
-@app.command()
 def create_tests(
     config_file: str = typer.Option(None, 
                                         help = "Name of the config file \
@@ -65,7 +37,8 @@ def create_tests(
     output_filename: str = typer.Option("testing-descriptor.yaml", 
                                         help = "Output filename"),
     clear_executions: bool = typer.Option(False, 
-                                        help = "Clear executions")
+                                        help = "Clear executions"),
+    infer_tags_from_nsd: Optional[List[str]] = typer.Option(None)
     ):
     '''
     Create tests descriptor from a given config.yaml containing the intended tests
@@ -81,13 +54,27 @@ def create_tests(
     clear_executions : bool (optional)
         A boolean flag indicating whether to clear previous test
         execution history from the test descriptor before creating the new descriptor.
+    network_service_descriptor : list[str] (optional)
+        Network Service Descriptor to be used to infer tags 
+        (this option can be called multiple times)
+    infer_tags_from_nsd : list[str] (optional)
+        Network Service Descriptor to be used to infer tags 
+        (this option can be called multiple times)
     
     Returns
     -------
     None
     '''
+    if infer_tags_from_nsd:
+        if state["verbose"]: 
+            descriptors = [os.path.basename(path) for path in infer_tags_from_nsd]
+            
+            print(f"\nInfering tags from the following descriptors: {descriptors}")
+
+        infer_tags(infer_tags_from_nsd)
+
     if state["verbose"]: 
-        print("Reading configuration file...")
+        print("\nReading configuration file...")
 
     try:
         with open(config_file, "r") as stream:
@@ -114,7 +101,7 @@ def create_tests(
             print(exc)
 
     if state["verbose"]:
-        print("Descriptor generated, check it at the descriptor folder")
+        print("\nDescriptor generated, check it at the descriptor folder.")
 
 
 def reset_sections(intended_tests: dict(), clear_executions: bool):
@@ -180,6 +167,31 @@ def reset_sections(intended_tests: dict(), clear_executions: bool):
         ]
 
     return tests
+
+def infer_tags(network_service_descriptor: list()):
+    '''
+    Infer tags from given NSD(s)
+
+    Parameters
+    ----------
+    network_service_descriptor : list[str]
+        List with NSDs to be used to infer tags 
+    '''
+    if not network_service_descriptor:
+        nsd = input("Are you sure you want to continue without providing a NSD? [y/n]: ")
+        if nsd == "n": 
+            return
+        
+    if network_service_descriptor:
+        for descriptor in network_service_descriptor:
+            parser = InjectedTagsParser(descriptor)
+            parser.parse_descriptor()
+
+            interfaces = parser.interfaces
+
+            print("\nThe following tags were generated:")
+            for interface in interfaces:
+                print(interface)
 
 
 def read_tests_info():
