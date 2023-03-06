@@ -10,7 +10,7 @@ Welcome to 5GASP CLI's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   test
+   pages/Installation
 
 Indices and tables
 ==================
