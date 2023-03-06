@@ -23,7 +23,12 @@ To list all parameters of a command, run:
 ## Documentation
 
 For the documentation, the (Sphinx)[https://www.sphinx-doc.org/en/master/] documentation generator was used.
-To generate the documentation for this project, inside the */5gasp-cli/docs/* directory, run:
+
+To create a new page, create a markdown file inside the */5gasp-cli/docs/* directory.
+
+To generate the documentation for that file, inside the same directory, insert the file's name on the *index.rst* file (without the *.md* extension).
+
+To build the documentation, run:
 
     1. make clean
     2. make html
