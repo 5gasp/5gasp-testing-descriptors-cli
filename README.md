@@ -22,7 +22,7 @@ To list all parameters of a command, run:
 
 ## Documentation
 
-For the documentation, the (Sphinx)[https://www.sphinx-doc.org/en/master/] documentation generator was used.
+For the documentation, the [Sphinx](https://www.sphinx-doc.org/en/master/) documentation generator was used.
 To generate the documentation for this project, inside the */5gasp-cli/docs/* directory, run:
 
     1. make clean
