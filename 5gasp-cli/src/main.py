@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-02-21 20:39:49
+# @Last Modified time: 2023-03-09 15:41:53
 
 # OS
 import sys
@@ -16,8 +16,10 @@ import pprint
 import typer
 
 #ruamel.yaml
+import ruamel.yaml
 from ruamel.yaml import YAML
 from ruamel.yaml.error import YAMLError
+from ruamel.yaml.comments import CommentedMap, CommentedSeq
 
 from Testcase.testcase import Testcase
 from Execution.execution import Execution
@@ -26,7 +28,7 @@ from Parser.parser import InjectedTagsParser
 app = typer.Typer(pretty_exceptions_show_locals = False)
 state = {"verbose": False}
 
-yaml = YAML(typ = "safe") # safe mode - loads a document without resolving unknown tags
+yaml = YAML() # safe mode - loads a document without resolving unknown tags
 yaml.default_flow_style = False
 
 @app.command()
@@ -149,8 +151,19 @@ def reset_sections(intended_tests: dict(), clear_executions: bool):
 
         # add parameters to testcase
         for variable in test['test_variables']:
-            testcase.add_parameter({'key': variable['variable_name'], 'value': ""})
 
+            # initialize parameter as a CommentedMap, which is a dict like
+            # construct that supports adding a comment to a given key
+            parameter = ruamel.yaml.comments.CommentedMap()
+
+            parameter['key'] = variable['variable_name']
+            parameter['value'] = ""
+
+            if variable['description']:
+                parameter.yaml_add_eol_comment(variable['description'], 'value')
+
+            testcase.add_parameter(parameter)
+            
         # add testcase to tests
         tests['test_phases']['setup']['testcases'].append(testcase.testcase)
         
@@ -167,6 +180,7 @@ def reset_sections(intended_tests: dict(), clear_executions: bool):
         ]
 
     return tests
+
 
 def infer_tags(network_service_descriptor: list()):
     '''
