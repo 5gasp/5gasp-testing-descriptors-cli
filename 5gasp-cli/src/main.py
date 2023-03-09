@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-02-21 20:39:49
+# @Last Modified time: 2023-03-09 17:48:18
 
 # OS
 import sys
@@ -204,7 +204,7 @@ def read_tests_info():
         Dictionary containing tests information from test_information.yaml.
     '''
     try:
-        with open("../../files/test_information.yaml", "r") as stream:
+        with open("../../resources/test_information.yaml", "r") as stream:
             try:
                 test_information = yaml.load(stream)
             except YAMLError as exc:
@@ -226,7 +226,7 @@ def read_testing_descriptors():
         Dictionary containing the testing descriptors.
     '''
     try:
-        with open("../../files/testing-descriptor_nods.yaml", "r") as stream:
+        with open("../../resources/testing-descriptor_nods.yaml", "r") as stream:
             try:
                 testing_descriptor_nods = yaml.load(stream)
             except YAMLError as exc:
