@@ -3,7 +3,7 @@
 # @Last Modified by:   Eduardo Santos
 # @Last Modified time: 2023-02-10 16:55:34
 tests:
-  - bandwidth
-  - transmission_speed
-  - packet_loss
+  #- bandwidth
+  #- transmission_speed
+  #- packet_loss
   - open_ports
