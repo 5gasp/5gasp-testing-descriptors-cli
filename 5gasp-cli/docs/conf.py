@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-# @Author: Eduardo Santos
-# @Date:   2023-02-20 14:32:36
-# @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-02-20 14:51:27
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -11,11 +6,6 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-import os
-import sys
-
-sys.path.insert(0, os.path.abspath("../src"))
-
 project = '5GASP CLI'
 copyright = '2023, Eduardo Santos'
 author = 'Eduardo Santos'
@@ -23,7 +13,7 @@ author = 'Eduardo Santos'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.todo', 'sphinx.ext.viewcode', 'sphinx.ext.autodoc']
+extensions = ['myst_parser']
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
