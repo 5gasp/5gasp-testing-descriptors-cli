@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-03-10 17:17:17
+# @Last Modified time: 2023-03-10 17:43:05
 
 # OS
 import sys
@@ -205,7 +205,8 @@ def add_tests_to_testcases(
         for variable in test['test_variables']:
             tag = ""
             
-            if variable['injected_by_nods'] \
+            if "injected_by_nods" in variable \
+                and variable['injected_by_nods'] \
                 and variable['injected_artifact_type'] == "connection_point":
                 print("True")
 

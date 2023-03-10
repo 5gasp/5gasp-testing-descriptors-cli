@@ -1,9 +1,9 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-02 16:01:23
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-02-10 16:55:34
+# @Last Modified time: 2023-03-10 17:43:25
 tests:
-  - bandwidth
-  - transmission_speed
-  - packet_loss
+  #- bandwidth
+  #- transmission_speed
+  #- packet_loss
   - open_ports
