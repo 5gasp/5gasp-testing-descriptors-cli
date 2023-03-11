@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-03-10 17:43:05
+# @Last Modified time: 2023-03-11 14:30:54
 
 # OS
 import sys
@@ -65,14 +65,37 @@ def create_tests(
     -------
     None
     '''
+    infering = False
+    connection_points = {}
+    connection_point_values = {}
+    
     if infer_tags_from_nsd:
-        if state["verbose"]: 
-            descriptors = [os.path.basename(path) for path in infer_tags_from_nsd]
-            
-            print(f"\nInfering tags from the following descriptors: {descriptors}")
-
+        infering = True
+        descriptors = [os.path.basename(path) for path in infer_tags_from_nsd]
         connection_points = infer_tags(infer_tags_from_nsd)
         connection_point_values = read_connection_point_values()
+
+    else:
+        while True:
+            opt = input("\nAre you sure you want to continue without providing a NSD? [y/n]: ")
+
+            if opt not in ["y", "n"]:
+                print(f"\nERROR! The value must be \"y\" or \"n\"")
+                continue
+            else:
+                break
+
+        if opt == "n":
+            infering = True
+            
+            d = input("\nEnter the location of the descriptors, separated by a \",\": ")
+            descriptors = [os.path.basename(path) for path in d.split(",")]
+
+            connection_points = infer_tags(d.split(","))
+            connection_point_values = read_connection_point_values()
+
+    if infering and state["verbose"]: 
+            print(f"\nInfering tags from the following descriptors: {descriptors}")
 
     if state["verbose"]: 
         print("\nReading configuration file...")
@@ -158,8 +181,8 @@ def add_tests_to_testcases(
         tests: dict(), 
         tests_info: dict(), 
         intended_tests: dict(),
-        connection_points: dict(),
-        connection_point_values: dict()
+        connection_points = {},
+        connection_point_values = {}
         ):
     '''
     Add developer given tests to the testcases
@@ -172,14 +195,14 @@ def add_tests_to_testcases(
         Dictionary containing tests info.
     intended_tests : bool
         Dictionary containing tests to be added.
-    connection_points: dict
+    connection_points : dict
         Connection points infered from NSD(s)
-    connection_point_values: dict
+    connection_point_values : dict
         Possible values for the connection points.
     
     Returns
     -------
-    tests: dict
+    tests : dict
         Updated testing descriptors.
     '''
 
@@ -205,43 +228,46 @@ def add_tests_to_testcases(
         for variable in test['test_variables']:
             tag = ""
             
-            if "injected_by_nods" in variable \
-                and variable['injected_by_nods'] \
-                and variable['injected_artifact_type'] == "connection_point":
-                print("True")
+            if connection_points:
+                
+                if "injected_by_nods" in variable \
+                    and variable['injected_by_nods'] \
+                    and variable['injected_artifact_type'] == "connection_point":
+                    print("True")
 
-                print(f"\nThe {variable['variable_name']} parameter must have a connection point injected")
+                    print(f"\nThe {variable['variable_name']} parameter must have a connection point injected")
 
-                print("\nThe following connection points were infered from the given NSD(s):")
+                    print("\nThe following connection points were infered from the given NSD(s):")
 
-                for i, connection_point in enumerate(connection_points, 1):
-                    print(f"{i}: {connection_point}")
+                    for i, connection_point in enumerate(connection_points, 1):
+                        print(f"{i}: {connection_point}")
 
-                while True:
-                    cp = input("\nWhich connection point do you want to inject on the parameter? ")
+                    while True:
+                        cp = input("\nWhich connection point do you want to inject on the parameter? ")
 
-                    if int(cp) not in range(1, i + 1):
-                        print(f"\nERROR! The connection point must be an int between 1 - {i}")
-                        continue
-                    else:
-                        break
+                        if int(cp) not in range(1, i + 1):
+                            print(f"\nERROR! The connection point must be an int between 1 - {i}")
+                            continue
+                        else:
+                            break
 
-                print("\nThe following values can be injected into the connection point:")
+                    print("\nThe following values can be injected into the connection point:")
 
-                for i, connection_point_value in enumerate(connection_point_values, 1):
-                    print(f"{i}: {connection_point_value}")
+                    for i, connection_point_value in enumerate(connection_point_values, 1):
+                        print(f"{i}: {connection_point_value}")
 
-                while True:
-                    value = input("\nWhich value do you want to inject on the connection point? ")
+                    while True:
+                        value = input("\nWhich value do you want to inject on the connection point? ")
 
-                    if int(value) not in range(1, i + 1):
-                        print(f"\nERROR! The value must be an int between 1 - {i}")
-                        continue
-                    else:
-                        break
-                    
-                tag = connection_points[int(cp) - 1][:-2] + "|" \
-                        + connection_point_values[int(value) - 1] + "}}"
+                        if int(value) not in range(1, i + 1):
+                            print(f"\nERROR! The value must be an int between 1 - {i}")
+                            continue
+                        else:
+                            break
+                        
+                    tag = connection_points[int(cp) - 1][:-2] + "|" \
+                            + connection_point_values[int(value) - 1] + "}}"
+                
 
             testcase.add_parameter({'key': variable['variable_name'], 'value': tag})
 
@@ -262,22 +288,14 @@ def infer_tags(network_service_descriptor: list()):
 
      Returns
     -------
-    tags: dict
+    tags : dict
         Connection points infered.
     '''
-    if not network_service_descriptor:
-        nsd = input("Are you sure you want to continue without providing a NSD? [y/n]: ")
-        if nsd == "n": 
-            return
-        
-    if network_service_descriptor:
-        for descriptor in network_service_descriptor:
-            parser = InjectedTagsParser(descriptor)
-            parser.parse_descriptor()
+    for descriptor in network_service_descriptor:
+        parser = InjectedTagsParser(descriptor)
+        parser.parse_descriptor()
 
-            tags = parser.interfaces
-
-    return tags
+    return parser.interfaces
 
 
 def read_tests_info():
