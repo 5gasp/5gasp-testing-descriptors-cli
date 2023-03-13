@@ -11,7 +11,7 @@ To install the requirements, run:
 
 ### Run
 
-You can find the code inside the */5gasp-cli/docs/src/* directory.
+You can find the code inside the */5gasp-cli/src/* directory.
 To list all CLI commands, run:
 
     python3 main.py --help
