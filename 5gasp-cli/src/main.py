@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-03-11 14:30:54
+# @Last Modified time: 2023-03-13 16:16:53
 
 # OS
 import sys
@@ -10,7 +10,7 @@ import os
 
 # Python
 from typing import List, Optional
-import pprint
+from pprint import pprint
 
 # Typer
 import typer
@@ -80,7 +80,7 @@ def create_tests(
             opt = input("\nAre you sure you want to continue without providing a NSD? [y/n]: ")
 
             if opt not in ["y", "n"]:
-                print(f"\nERROR! The value must be \"y\" or \"n\"")
+                print(f"\nERROR! The value must be \'y\' or \'n\'")
                 continue
             else:
                 break
@@ -144,6 +144,79 @@ def create_tests(
         print("\nDescriptor generated!")
 
 
+@app.command()
+def list_available_tests():
+    tests = read_tests_info()['tests']['testbed_itav']
+
+    tests_list = [test for test in tests]
+    
+    print("\nThe following tests can be injected on the testing descriptor:\n")
+    
+    for i, test in enumerate(tests, 1):
+        print(f"{i} - {test}")
+        
+    while True:
+        opt = input("\nDo you wish to see some information about a test? [y/n]: ")
+
+        if opt not in ["y", "n"]:
+            print(f"\nERROR! The value must be \'y\' or \'n\'")
+            continue
+        else:
+            if opt == "n":
+                sys.exit(0)
+            else:
+                while True:
+                    test_number = input(f"Choose the test: [1 - {i}]: ")
+                    
+                    is_valid = is_digit_and_in_range(test_number, i)
+
+                    if is_valid:
+                        continue
+                    else: 
+                        break
+            break
+        
+    test = tests_list[int(test_number) - 1]
+
+    print(f"The chosen test was: {test}")
+    print("\nTest information:")
+    print(f"\nName: {tests[test]['name']}")
+    print(f"Description: \"{tests[test]['description']}\"")
+    print(f"Parameters/Variables:")
+
+    for parameter in tests[test]['test_variables']:
+        print(f"\n\tVariable name: {parameter['variable_name']}")
+        print(f"\tDescription: {parameter['description']}")
+    
+    list_available_tests()
+
+
+def is_digit_and_in_range(value: str, i):
+    '''
+    verify if given value is digit and in range(1, i + 1)
+
+    Parameters
+    ----------
+    value : str
+        Value to be verified
+    i : int
+        Maximum range
+    
+    Returns
+    -------
+    1 if not valid, 0 if valid
+    '''
+    if not value.isdigit():
+        print(f"\nERROR! The value must be between 1 - {i}")
+        return 1
+    else:
+        if int(value) not in range(1, i + 1):
+            print(f"\nERROR! The value must be between 1 - {i}")
+            return 1
+        else:
+            return 0
+        
+
 def reset_sections(tests: dict(), clear_executions: bool):
     '''
     Reset user-given sections to later be filled by the developer
@@ -176,6 +249,7 @@ def reset_sections(tests: dict(), clear_executions: bool):
         ]
 
     return tests
+
 
 def add_tests_to_testcases(
         tests: dict(), 
@@ -240,29 +314,31 @@ def add_tests_to_testcases(
                     print("\nThe following connection points were infered from the given NSD(s):")
 
                     for i, connection_point in enumerate(connection_points, 1):
-                        print(f"{i}: {connection_point}")
+                        print(f"{i} - {connection_point}")
 
                     while True:
                         cp = input("\nWhich connection point do you want to inject on the parameter? ")
 
-                        if int(cp) not in range(1, i + 1):
-                            print(f"\nERROR! The connection point must be an int between 1 - {i}")
+                        is_valid = is_digit_and_in_range(cp, i)
+
+                        if is_valid:
                             continue
-                        else:
+                        else: 
                             break
 
                     print("\nThe following values can be injected into the connection point:")
 
                     for i, connection_point_value in enumerate(connection_point_values, 1):
-                        print(f"{i}: {connection_point_value}")
+                        print(f"{i} - {connection_point_value}")
 
                     while True:
                         value = input("\nWhich value do you want to inject on the connection point? ")
 
-                        if int(value) not in range(1, i + 1):
-                            print(f"\nERROR! The value must be an int between 1 - {i}")
+                        is_valid = is_digit_and_in_range(value, i)
+
+                        if is_valid:
                             continue
-                        else:
+                        else: 
                             break
                         
                     tag = connection_points[int(cp) - 1][:-2] + "|" \
