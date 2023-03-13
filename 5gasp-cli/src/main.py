@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-03-13 16:16:53
+# @Last Modified time: 2023-03-13 16:56:46
 
 # OS
 import sys
@@ -146,6 +146,9 @@ def create_tests(
 
 @app.command()
 def list_available_tests():
+    '''
+    List available tests to developer
+    '''
     tests = read_tests_info()['tests']['testbed_itav']
 
     tests_list = [test for test in tests]
@@ -193,7 +196,7 @@ def list_available_tests():
 
 def is_digit_and_in_range(value: str, i):
     '''
-    verify if given value is digit and in range(1, i + 1)
+    Verify if given value is digit and in range(1, i + 1)
 
     Parameters
     ----------
