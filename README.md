@@ -20,6 +20,26 @@ To list all parameters of a command, run:
 
     python3 main.py COMMAND --help
 
+Here are some examples:
+
+1. Create a testing descriptor from a config file:
+
+```python
+python3 main.py create-tests --config-file "../../resources/config.yaml"
+```
+
+2. Infer tags from a NSD:
+
+```python
+python3 main.py create-tests --config-file "../../resources/config.yaml" --infer-tags-from-nsd "../../resources/hackfest_multivdu_nsd.yaml"
+```
+
+3. List all available tests:
+
+```python
+python3 main.py list-available-tests
+```
+
 ## Documentation
 
 For the documentation, the [Sphinx](https://www.sphinx-doc.org/en/master/) documentation generator was used.
