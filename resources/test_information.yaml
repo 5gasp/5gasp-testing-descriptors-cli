@@ -1,7 +1,7 @@
 # @Author: Rafael Direito
 # @Date:   01-06-2021 17:43:43
-# @Last Modified by:   Rafael Direito
-# @Last Modified time: 2023-02-18 18:00:53
+# @Last Modified by:   Eduardo Santos
+# @Last Modified time: 2023-03-09 18:10:24
 ---
 tests:
   testbed_itav:
@@ -214,6 +214,7 @@ tests:
         possible_options: []
         type: str
         injected_by_nods: true
+        injected_artifact_type: connection_point
         example: 192.158.1.38
       - variable_name: expected_open_port
         description: Port that should be opened

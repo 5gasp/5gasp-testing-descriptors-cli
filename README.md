@@ -11,7 +11,7 @@ To install the requirements, run:
 
 ### Run
 
-You can find the code inside the */5gasp-cli/docs/src/* directory.
+You can find the code inside the */5gasp-cli/src/* directory.
 To list all CLI commands, run:
 
     python3 main.py --help
@@ -19,6 +19,26 @@ To list all CLI commands, run:
 To list all parameters of a command, run:
 
     python3 main.py COMMAND --help
+
+Here are some examples:
+
+1. Create a testing descriptor from a config file:
+
+```python
+python3 main.py create-tests --config-file "../../resources/config.yaml"
+```
+
+2. Infer tags from a NSD:
+
+```python
+python3 main.py create-tests --config-file "../../resources/config.yaml" --infer-tags-from-nsd "../../resources/hackfest_multivdu_nsd.yaml"
+```
+
+3. List all available tests:
+
+```python
+python3 main.py list-available-tests
+```
 
 ## Documentation
 

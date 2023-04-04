@@ -224,4 +224,7 @@ poetry.toml
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,python,macos
-resources/
+resources/IMG_0568.HEIC
+resources/IMG_0569.HEIC
+resources/New Recording.m4a
+5gasp-cli/docs/_build
