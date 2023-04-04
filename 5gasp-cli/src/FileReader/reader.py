@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-04 01:14:05
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-04 01:15:19
+# @Last Modified time: 2023-04-04 15:09:07
 
 # OS
 import sys
@@ -15,6 +15,9 @@ yaml = YAML()
 yaml.default_flow_style = False
 
 class FileReader:
+    def __init__(self):
+        self.RESOURCES_DIR = "../../resources/"
+        
     def read_tests_info(self):
         '''
         Read tests information from test_information.yaml
@@ -25,7 +28,7 @@ class FileReader:
             Dictionary containing tests information from test_information.yaml.
         '''
         try:
-            with open("../../resources/test_information.yaml", "r") as stream:
+            with open(self.RESOURCES_DIR + "test_information.yaml", "r") as stream:
                 try:
                     test_information = yaml.load(stream)
                 except YAMLError as exc:
@@ -47,7 +50,7 @@ class FileReader:
             Dictionary containing the testing descriptors.
         '''
         try:
-            with open("../../resources/testing-descriptor_nods.yaml", "r") as stream:
+            with open(self.RESOURCES_DIR + "testing-descriptor_nods.yaml", "r") as stream:
                 try:
                     testing_descriptor_nods = yaml.load(stream)
                 except YAMLError as exc:
@@ -68,7 +71,7 @@ class FileReader:
             Dictionary containing the connection point values.
         '''
         try:
-            with open("../../resources/connection_point_values.yaml", "r") as stream:
+            with open(self.RESOURCES_DIR + "connection_point_values.yaml", "r") as stream:
                 try:
                     connection_point_values = yaml.load(stream)
                 except YAMLError as exc:
