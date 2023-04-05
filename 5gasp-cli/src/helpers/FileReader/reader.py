@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-04 01:14:05
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-04 15:09:07
+# @Last Modified time: 2023-04-05 15:51:23
 
 # OS
 import sys
@@ -17,6 +17,32 @@ yaml.default_flow_style = False
 class FileReader:
     def __init__(self):
         self.RESOURCES_DIR = "../../resources/"
+
+    def read_intended_tests(self, config_file):
+        '''
+        Read the intended tests from a config file
+
+        Parameters
+        ----------
+        config_file : str
+            Path to the configuration file
+
+        Returns
+        -------
+        test_information : dict
+            Dictionary containing tests information from test_information.yaml.
+        '''
+        try:
+            with open(config_file, "r") as stream:
+                try:
+                    intended_tests = yaml.load(stream) # dict
+                except YAMLError as exc:
+                    print(exc)
+        except FileNotFoundError as e:
+            print(f"Error! File {config_file} not found!")
+            return sys.exit(0)
+        
+        return intended_tests
         
     def read_tests_info(self):
         '''

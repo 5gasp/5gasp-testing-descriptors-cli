@@ -2,25 +2,41 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-04 16:39:57
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-04 16:44:52
+# @Last Modified time: 2023-04-05 17:54:14
 
 # OS 
 import sys
 
 class Prompts:
 
-    def continue_without_nsd(self):
+    def yes_and_no_prompt(self, prompt: str):
+        '''
+        Prompt
+
+        Returns
+        -------
+        opt : bool
+            1 if yes else 0
+        '''
         while True:
-            opt = input("\nAre you sure you want to continue without providing a NSD? [y/n]: ")
+            opt = input(f"\n{prompt} [y/n]: ")
 
             if opt not in ["y", "n"]:
                 print(f"\nERROR! The value must be \'y\' or \'n\'")
                 continue
             else:
-                return opt
+                return 0 if opt == "n" else 1
             
 
     def info_about_test(self, i: int):
+        '''
+        Prompt
+
+        Returns
+        -------
+        test_number : int
+            Number of the test
+        '''
         while True:
             opt = input("\nDo you wish to see some information about a test? [y/n]: ")
 
@@ -44,6 +60,14 @@ class Prompts:
             
 
     def connection_point_to_inject(self, i: int):
+        '''
+        Prompt
+
+        Returns
+        -------
+        cp : int
+            Connection point on which to inject a value
+        '''
         while True:
             cp = input("\nWhich connection point do you want to inject on the parameter? ")
 
@@ -56,6 +80,14 @@ class Prompts:
     
     
     def value_to_inject_on_connection_point(self, i: int):
+        '''
+        Prompt
+
+        Returns
+        -------
+        value : str
+            Value to inject on the connection point
+        '''
         while True:
             value = input("\nWhich value do you want to inject on the connection point? ")
 
@@ -64,6 +96,29 @@ class Prompts:
             if is_valid:
                 continue
             else: 
+                return value
+            
+    def connection_point_or_manually(self):
+        '''
+        Prompt
+
+        Returns
+        -------
+        value : str
+            1 if connection point, the value to inject if manually
+        '''
+        while True:
+            opt = input("\nDo you want to inject a connection point (1), or add the value manually (2)? ")
+
+            if opt not in ["1", "2"]:
+                print(f"\nERROR! The value must be \'1\' or \'2\'")
+                continue
+            else:
+                if opt == "1":
+                    return 1
+                else:
+                    value = input(f"Enter the value to manually inject: ")
+
                 return value
             
     

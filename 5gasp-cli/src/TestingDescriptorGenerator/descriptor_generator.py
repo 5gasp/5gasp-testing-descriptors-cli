@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-03 23:41:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-04 16:45:02
+# @Last Modified time: 2023-04-05 17:51:53
 
 # OS
 import sys
@@ -11,14 +11,14 @@ import os
 # Python
 from typing import List, Optional
 
-#ruamel.yaml
+# ruamel.yaml
 from ruamel.yaml import YAML
 from ruamel.yaml.error import YAMLError
 
 from Testcase.testcase import Testcase
 from Execution.execution import Execution
 from Parser.parser import InjectedTagsParser
-from FileReader.reader import FileReader
+from helpers.FileReader.reader import FileReader
 from helpers.Prompt.prompts import Prompts
 
 yaml = YAML()
@@ -74,9 +74,9 @@ class TestingDescriptorGenerator:
             connection_point_values = self.file_reader.read_connection_point_values()
 
         else:
-            opt = self.prompts.continue_without_nsd()
+            opt = self.prompts.yes_and_no_prompt("Are you sure you want to continue without providing a NSD?")
 
-            if opt == "n":
+            if opt == 0:
                 infering = True
                 
                 d = input("\nEnter the location of the descriptors, separated by a \",\": ")
@@ -91,35 +91,40 @@ class TestingDescriptorGenerator:
         if self.state["verbose"]: 
             print("\nReading configuration file...")
 
-        try:
-            with open(config_file, "r") as stream:
-                try:
-                    intended_tests = yaml.load(stream) # dict
-                except YAMLError as exc:
-                    print(exc)
-        except FileNotFoundError as e:
-            print(f"Error! File {config_file} not found!")
-            return sys.exit(0)
+        intended_tests = self.file_reader.read_intended_tests(config_file)
 
         if self.state["verbose"]: 
             print("Configuration file read!")
 
-        # testing descriptors from testing-descriptor_nods.yaml
+        netapp_id = input("Network Application ID: ")
+        testbed_id = input("Testbed ID: ")
+        description = input("Description: ")
+
+        # testing descriptor from testing-descriptor_nods.yaml
         tests = self.file_reader.read_testing_descriptors()
 
         # tests info from test_information.yaml
         tests_info = self.file_reader.read_tests_info()
 
         cleared_tests = self.reset_sections(tests, clear_executions)
+        
+        cleared_tests['test_info']['netapp_id'] = netapp_id
+        cleared_tests['test_info']['testbed_id'] = testbed_id
+        cleared_tests['test_info']['description'] = description
 
-        # add intended tests to testcases
-        descriptor = self.add_tests_to_testcases(
-                        cleared_tests, 
-                        tests_info, 
-                        intended_tests, 
-                        connection_points,
-                        connection_point_values
-                    )
+        configure_testcase = self.prompts.yes_and_no_prompt("Do you want to configure a test case?")
+        
+        if configure_testcase:
+            # add intended tests to testcases
+            descriptor = self.add_tests_to_testcases(
+                            cleared_tests, 
+                            tests_info, 
+                            intended_tests, 
+                            connection_points,
+                            connection_point_values
+                        )
+        else:
+            descriptor = cleared_tests
 
         if self.state["verbose"]: 
             print("Creating the descriptor...")
@@ -182,6 +187,9 @@ class TestingDescriptorGenerator:
             Updated testing descriptors.
         '''
 
+        del tests['test_info']['network_service_id']
+
+        # clear testcases
         tests['test_phases']['setup']['testcases'].clear()
         
         if clear_executions:
@@ -237,7 +245,15 @@ class TestingDescriptorGenerator:
         
         for i, test in enumerate(intended_test_types, 1):
             test = test_types[test]
-            
+
+            print(f"\n\tTest: {test['name']}")
+            print(f"\n\tType: {test['test_type']}")
+            print(f"\n\tDescription: {test['description']}")
+            opt = self.prompts.yes_and_no_prompt("Do you want to configure this testcase?")
+
+            if opt == 0:
+                continue
+
             testcase = Testcase(
                             id = i,
                             type = test['test_type'],
@@ -256,7 +272,6 @@ class TestingDescriptorGenerator:
                     if "injected_by_nods" in variable \
                         and variable['injected_by_nods'] \
                         and variable['injected_artifact_type'] == "connection_point":
-                        print("True")
 
                         print(f"\nThe {variable['variable_name']} parameter must have a connection point injected")
 
@@ -265,17 +280,23 @@ class TestingDescriptorGenerator:
                         for i, connection_point in enumerate(connection_points, 1):
                             print(f"{i} - {connection_point}")
 
-                        cp = self.prompts.connection_point_to_inject(i)
+                        opt = self.prompts.connection_point_or_manually()
+                        
+                        if opt == 1:
 
-                        print("\nThe following values can be injected into the connection point:")
+                            cp = self.prompts.connection_point_to_inject(i)
 
-                        for i, connection_point_value in enumerate(connection_point_values, 1):
-                            print(f"{i} - {connection_point_value}")
+                            print("\nThe following values can be injected into the connection point:")
 
-                        value = self.prompts.value_to_inject_on_connection_point(i)
-                            
-                        tag = connection_points[int(cp) - 1][:-2] + "|" \
-                                + connection_point_values[int(value) - 1] + "}}"
+                            for i, connection_point_value in enumerate(connection_point_values, 1):
+                                print(f"{i} - {connection_point_value}")
+
+                            value = self.prompts.value_to_inject_on_connection_point(i)
+                                
+                            tag = connection_points[int(cp) - 1][:-2] + "|" \
+                                    + connection_point_values[int(value) - 1] + "}}"
+                        else:
+                            tag = opt
                     
 
                 testcase.add_parameter({'key': variable['variable_name'], 'value': tag})
