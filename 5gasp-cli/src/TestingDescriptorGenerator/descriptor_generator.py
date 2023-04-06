@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-03 23:41:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-06 14:45:36
+# @Last Modified time: 2023-04-06 16:05:04
 
 # OS
 import os
@@ -23,6 +23,7 @@ from modules.Execution.execution import Execution
 from helpers.DescriptorParser.parser import InjectedTagsParser
 from helpers.FileReader.reader import FileReader
 from helpers.Prompt.prompts import Prompts
+from helpers.CICDManagerAPIClient.apli_client import CICDManagerAPIClient
 
 yaml = YAML()
 yaml.default_flow_style = False
@@ -99,8 +100,18 @@ class TestingDescriptorGenerator:
         if self.state["verbose"]: 
             print("Configuration file read!")
 
+        # user's input - network application's name
         netapp_name = input("Network Application's name: ")
-        testbed_name = input("Testbed's name: ")
+        
+        # user's input - test bed
+        testbeds = self.get_all_testbeds()
+        for i, testbed in enumerate(testbeds, 1):
+            print(f"Available testbeds: {testbed['name']} ({i})")
+            
+        testbed = self.prompts.choose_testbed(i)
+        testbed_name = testbeds[testbed - 1]['id']
+
+        # user's input - descriptor's description 
         description = input("Description: ")
 
         # testing descriptor from testing-descriptor_nods.yaml
@@ -337,3 +348,29 @@ class TestingDescriptorGenerator:
             parser.parse_descriptor()
 
         return parser.interfaces
+    
+
+    def get_all_testbeds(self):
+        api_client = CICDManagerAPIClient()
+        testbeds = api_client.get_all_testbeds()
+
+        if testbeds:
+            return testbeds
+        
+        
+    def get_all_tests(self):
+        api_client = CICDManagerAPIClient()
+        tests = api_client.get_all_tests()
+
+        if tests:
+            return tests
+        
+    
+    def get_tests_per_testbed(self, testbed: str):
+        api_client = CICDManagerAPIClient()
+        tests = api_client.get_tests_per_testbed(testbed)
+
+        if tests:
+            return tests
+
+        

@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-04 16:39:57
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-05 17:54:14
+# @Last Modified time: 2023-04-06 16:11:53
 
 # OS 
 import sys
@@ -12,6 +12,11 @@ class Prompts:
     def yes_and_no_prompt(self, prompt: str):
         '''
         Prompt
+
+        Parameters
+        ----------
+        prompt: str
+            Text to be prompted
 
         Returns
         -------
@@ -31,6 +36,11 @@ class Prompts:
     def info_about_test(self, i: int):
         '''
         Prompt
+
+        Parameters
+        ----------
+        i: int
+            Range of values to accept
 
         Returns
         -------
@@ -63,6 +73,11 @@ class Prompts:
         '''
         Prompt
 
+        Parameters
+        ----------
+        i: int
+            Range of values to accept
+
         Returns
         -------
         cp : int
@@ -83,9 +98,14 @@ class Prompts:
         '''
         Prompt
 
+        Parameters
+        ----------
+        i: int
+            Range of values to accept
+
         Returns
         -------
-        value : str
+        value : int
             Value to inject on the connection point
         '''
         while True:
@@ -101,6 +121,11 @@ class Prompts:
     def connection_point_or_manually(self):
         '''
         Prompt
+
+        Parameters
+        ----------
+        i: int
+            Range of values to accept
 
         Returns
         -------
@@ -131,7 +156,7 @@ class Prompts:
         value : str
             Value to be verified
         i : int
-            Maximum range
+            Range of values to accept
         
         Returns
         -------
@@ -146,3 +171,28 @@ class Prompts:
                 return 1
             else:
                 return 0
+            
+    
+    def choose_testbed(self, i: int):
+        '''
+        Prompt
+
+        Parameters
+        ----------
+        i: int
+            Range of values to accept
+
+        Returns
+        -------
+        value : int
+            Testbed
+        '''
+        while True:
+            value = input("\nChoose the preferred test bed: ")
+
+            is_valid = self.is_digit_and_in_range(value, i)
+
+            if is_valid:
+                continue
+            else: 
+                return int(value)
