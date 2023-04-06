@@ -2,11 +2,11 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-03 23:41:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-05 17:51:53
+# @Last Modified time: 2023-04-06 14:45:36
 
 # OS
-import sys
 import os
+from re import sub
 
 # Python
 from typing import List, Optional
@@ -15,9 +15,12 @@ from typing import List, Optional
 from ruamel.yaml import YAML
 from ruamel.yaml.error import YAMLError
 
-from Testcase.testcase import Testcase
-from Execution.execution import Execution
-from Parser.parser import InjectedTagsParser
+# Modules
+from modules.Testcase.testcase import Testcase
+from modules.Execution.execution import Execution
+
+# Helpers
+from helpers.DescriptorParser.parser import InjectedTagsParser
 from helpers.FileReader.reader import FileReader
 from helpers.Prompt.prompts import Prompts
 
@@ -96,8 +99,8 @@ class TestingDescriptorGenerator:
         if self.state["verbose"]: 
             print("Configuration file read!")
 
-        netapp_id = input("Network Application ID: ")
-        testbed_id = input("Testbed ID: ")
+        netapp_name = input("Network Application's name: ")
+        testbed_name = input("Testbed's name: ")
         description = input("Description: ")
 
         # testing descriptor from testing-descriptor_nods.yaml
@@ -106,10 +109,22 @@ class TestingDescriptorGenerator:
         # tests info from test_information.yaml
         tests_info = self.file_reader.read_tests_info()
 
+        # descriptor with cleared test cases
         cleared_tests = self.reset_sections(tests, clear_executions)
         
-        cleared_tests['test_info']['netapp_id'] = netapp_id
-        cleared_tests['test_info']['testbed_id'] = testbed_id
+        netapp_name = '_'.join(
+                            sub(
+                                '([A-Z][a-z]+)', 
+                                r' \1', 
+                                sub(
+                                    '([A-Z]+)', 
+                                    r' \1', 
+                                    netapp_name.replace('-', ' ')
+                                )
+                            ).split()).lower()
+
+        cleared_tests['test_info']['netapp_id'] = netapp_name
+        cleared_tests['test_info']['testbed_id'] = testbed_name
         cleared_tests['test_info']['description'] = description
 
         configure_testcase = self.prompts.yes_and_no_prompt("Do you want to configure a test case?")
@@ -266,15 +281,12 @@ class TestingDescriptorGenerator:
             # add parameters to testcase
             for variable in test['test_variables']:
                 tag = ""
-                
                 if connection_points:
-                    
                     if "injected_by_nods" in variable \
                         and variable['injected_by_nods'] \
                         and variable['injected_artifact_type'] == "connection_point":
 
                         print(f"\nThe {variable['variable_name']} parameter must have a connection point injected")
-
                         print("\nThe following connection points were infered from the given NSD(s):")
 
                         for i, connection_point in enumerate(connection_points, 1):
@@ -283,7 +295,6 @@ class TestingDescriptorGenerator:
                         opt = self.prompts.connection_point_or_manually()
                         
                         if opt == 1:
-
                             cp = self.prompts.connection_point_to_inject(i)
 
                             print("\nThe following values can be injected into the connection point:")
