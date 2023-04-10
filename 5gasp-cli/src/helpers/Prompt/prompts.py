@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-04 16:39:57
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-06 16:11:53
+# @Last Modified time: 2023-04-10 16:20:40
 
 # OS 
 import sys
@@ -192,7 +192,48 @@ class Prompts:
 
             is_valid = self.is_digit_and_in_range(value, i)
 
-            if is_valid:
-                continue
-            else: 
+            if not is_valid:
                 return int(value)
+            
+    
+    def configure_testcase_parameter(self, test, testcase, i):
+        '''
+        Prompt
+
+        Parameters
+        ----------
+        test: dict
+            Dictionary containing testing descriptors.
+        testcase: Testcase
+            Testcase to inject values
+        i: int
+            Range of values to accept
+
+        Returns
+        -------
+        value : int
+            Testcase
+        '''
+        while True:
+            opt = self.yes_and_no_prompt("Do you wish to manually set a parameter?")
+
+            if opt == 0:
+                break
+            
+            while True:
+                parameter = input("\nChoose the parameter: ")
+
+                is_valid = self.is_digit_and_in_range(parameter, i)
+
+                if is_valid == 0:
+                    value = input("Enter the value to inject on the parameter: ")
+                    testcase.add_parameter(
+                        {'key': test['test_variables'][int(parameter) - 1]['variable_name'],
+                        'value': value}
+                    )
+                    break
+
+        return testcase
+
+
+            

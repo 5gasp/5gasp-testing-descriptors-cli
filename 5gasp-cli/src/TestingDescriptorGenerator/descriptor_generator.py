@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-03 23:41:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-06 16:05:04
+# @Last Modified time: 2023-04-10 16:22:34
 
 # OS
 import os
@@ -68,7 +68,7 @@ class TestingDescriptorGenerator:
         '''
 
         infering = False
-        connection_points = {}
+        connection_points = []
         connection_point_values = {}
         
         if infer_tags_from_nsd:
@@ -252,7 +252,7 @@ class TestingDescriptorGenerator:
             Dictionary containing tests info.
         intended_tests : bool
             Dictionary containing tests to be added.
-        connection_points : dict
+        connection_points : list
             Connection points infered from NSD(s)
         connection_point_values : dict
             Possible values for the connection points.
@@ -290,43 +290,88 @@ class TestingDescriptorGenerator:
             testcase.create_testcase()
 
             # add parameters to testcase
-            for variable in test['test_variables']:
-                tag = ""
-                if connection_points:
-                    if "injected_by_nods" in variable \
-                        and variable['injected_by_nods'] \
-                        and variable['injected_artifact_type'] == "connection_point":
-
-                        print(f"\nThe {variable['variable_name']} parameter must have a connection point injected")
-                        print("\nThe following connection points were infered from the given NSD(s):")
-
-                        for i, connection_point in enumerate(connection_points, 1):
-                            print(f"{i} - {connection_point}")
-
-                        opt = self.prompts.connection_point_or_manually()
-                        
-                        if opt == 1:
-                            cp = self.prompts.connection_point_to_inject(i)
-
-                            print("\nThe following values can be injected into the connection point:")
-
-                            for i, connection_point_value in enumerate(connection_point_values, 1):
-                                print(f"{i} - {connection_point_value}")
-
-                            value = self.prompts.value_to_inject_on_connection_point(i)
-                                
-                            tag = connection_points[int(cp) - 1][:-2] + "|" \
-                                    + connection_point_values[int(value) - 1] + "}}"
-                        else:
-                            tag = opt
-                    
-
-                testcase.add_parameter({'key': variable['variable_name'], 'value': tag})
-
+            t = self.add_parameters_to_testcase(
+                                                    test,
+                                                    connection_points, 
+                                                    connection_point_values, 
+                                                    testcase
+                                                )
             # add testcase to tests
-            tests['test_phases']['setup']['testcases'].append(testcase.testcase)
+            tests['test_phases']['setup']['testcases'].append(t.testcase)
 
         return tests
+    
+
+    def add_parameters_to_testcase(
+            self, 
+            test,
+            connection_points, 
+            connection_point_values, 
+            testcase
+        ):
+        '''
+        Add parameter to the testcase
+
+        Parameters
+        ----------
+        test: dict
+            Dictionary containing testing descriptors.
+        connection_points : list
+            Connection points infered from NSD(s).
+        connection_point_values : dict
+            Possible values for the connection points.
+        testcase: dict
+            Testcase 
+        
+        Returns
+        -------
+        testcase : dict
+            Updated testcase.
+        '''
+        for variable in test['test_variables']:
+            tag = ""
+
+            if connection_points \
+                and "injected_by_nods" in variable \
+                and variable['injected_by_nods'] \
+                and variable['injected_artifact_type'] == "connection_point":
+
+                print(f"\nThe {variable['variable_name']} parameter must have a connection point injected")
+                print("\nThe following connection points were infered from the given NSD(s):")
+
+                for i, connection_point in enumerate(connection_points, 1):
+                    print(f"{i} - {connection_point}")
+
+                opt = self.prompts.connection_point_or_manually()
+                
+                if opt == 1:
+                    cp = self.prompts.connection_point_to_inject(i)
+
+                    print("\nThe following values can be injected into the connection point:")
+
+                    for i, connection_point_value in enumerate(connection_point_values, 1):
+                        print(f"{i} - {connection_point_value}")
+
+                    value = self.prompts.value_to_inject_on_connection_point(i)
+                        
+                    tag = connection_points[int(cp) - 1][:-2] + "|" \
+                            + connection_point_values[int(value) - 1] + "}}"
+                else:
+                    tag = opt
+            
+            testcase.add_parameter({'key': variable['variable_name'], 'value': tag})
+
+        i = 0
+        print("\nThe testcase has also the following parameters:\n")
+        for variable in test['test_variables']:
+            if not "injected_by_nods" in variable or \
+                ("injected_by_nods" in variable and not variable['injected_by_nods']):
+                    i += 1
+                    print(f"{i} - {variable['variable_name']}")
+
+        testcase = self.prompts.configure_testcase_parameter(test, testcase, i)
+
+        return testcase
 
 
     def infer_tags(self, network_service_descriptor: list()):
