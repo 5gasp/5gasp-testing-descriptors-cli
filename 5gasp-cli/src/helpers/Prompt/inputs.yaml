@@ -1,0 +1,23 @@
+# @Author: Eduardo Santos
+# @Date:   2023-04-14 14:11:06
+# @Last Modified by:   Eduardo Santos
+# @Last Modified time: 2023-04-14 18:38:01
+---
+{
+  descriptors_location: "Enter the location of the descriptors, separated by a \",\": ",
+  network_app_name: "Network Application's name: ",
+  descriptor_description: "Description: ",
+  continue_without_nsd: "Are you sure you want to continue without providing a NSD?",
+  configure_a_testcase: "Do you want to configure a test case?",
+  configure_this_testcase: "Do you want to configure this testcase?",
+  error_y_or_n: "ERROR! The value must be \"y\" or \"n\"",
+  error_1_or_2: "ERROR! The value must be \"1\" or \"2\"",
+  info_about_test: "Do you wish to see some information about a test? [y/n]: ",
+  cp_to_inject: "Which connection point do you want to inject on the parameter? ",
+  cp_value: "Which value do you want to inject on the connection point? ",
+  inject_cp_or_manually: "Do you want to inject a connection point (1), or add the value manually (2)? ",
+  preferred_testbed: "Choose the preferred test bed: ",
+  manually_set_param: "Do you wish to manually set a parameter?",
+  choose_param: "Choose the parameter: ",
+  value_to_inject: "Enter the value to inject on the parameter: "
+}

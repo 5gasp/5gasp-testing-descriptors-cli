@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-04 01:14:05
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-05 15:51:23
+# @Last Modified time: 2023-04-14 18:26:08
 
 # OS
 import sys
@@ -107,3 +107,22 @@ class FileReader:
             return sys.exit(0)
 
         return connection_point_values['values']
+    
+
+    def read_inputs(self):
+        '''
+        Read inputs for prompts from inputs.yaml
+        
+        Returns
+        -------
+        inputs : dict
+            Dictionary containing the inputs' strings.
+        '''
+        try:
+            with open("helpers/Prompt/inputs.yaml", "r") as inputs_file:
+                inputs = yaml.load(inputs_file)
+        except FileNotFoundError as e:
+            print(e)
+            return sys.exit(0)
+        
+        return inputs

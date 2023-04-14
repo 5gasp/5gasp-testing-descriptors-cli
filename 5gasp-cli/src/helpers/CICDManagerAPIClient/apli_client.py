@@ -2,9 +2,11 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-06 14:55:17
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-06 16:13:06
+# @Last Modified time: 2023-04-13 15:22:42
 
 import requests
+
+from helpers.constants import *
 
 class CICDManagerAPIClient:
     def __init__(self):
@@ -18,7 +20,7 @@ class CICDManagerAPIClient:
         -------
             List of all testbeds.
         '''
-        path = "testbeds/all"
+        path = ALL_TESTBEDS_PATH
         url = f"{self.base_url}/{path}"
         
         try:
@@ -47,7 +49,7 @@ class CICDManagerAPIClient:
         -------
             List of all tests.
         '''
-        path = "tests/all"
+        path = ALL_TESTS_PATH
         url = f"{self.base_url}/{path}"
         
         try:
@@ -82,7 +84,7 @@ class CICDManagerAPIClient:
         -------
             List of all testbeds.
         '''
-        path = "tests/all"
+        path = ALL_TESTS_PATH
         url = f"{self.base_url}/{path}"
         params = {"testbed": testbed}
         

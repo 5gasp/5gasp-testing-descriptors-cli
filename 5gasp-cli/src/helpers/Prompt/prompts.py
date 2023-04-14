@@ -2,12 +2,24 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-04 16:39:57
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-10 16:20:40
+# @Last Modified time: 2023-04-14 18:37:28
 
 # OS 
+import os
 import sys
 
+# ruamel.yaml
+from ruamel.yaml import YAML
+
+from ..FileReader.reader import FileReader
+
+yaml = YAML()
+
 class Prompts:
+
+    def __init__(self):
+        reader = FileReader()
+        self.inputs = reader.read_inputs()
 
     def yes_and_no_prompt(self, prompt: str):
         '''
@@ -27,7 +39,7 @@ class Prompts:
             opt = input(f"\n{prompt} [y/n]: ")
 
             if opt not in ["y", "n"]:
-                print(f"\nERROR! The value must be \'y\' or \'n\'")
+                print("\n" + self.inputs['error_y_or_n'])
                 continue
             else:
                 return 0 if opt == "n" else 1
@@ -48,10 +60,10 @@ class Prompts:
             Number of the test
         '''
         while True:
-            opt = input("\nDo you wish to see some information about a test? [y/n]: ")
+            opt = input("\n" + self.inputs['info_about_test'])
 
             if opt not in ["y", "n"]:
-                print(f"\nERROR! The value must be \'y\' or \'n\'")
+                print("\n" + self.inputs['error_y_or_n'])
                 continue
             else:
                 if opt == "n":
@@ -84,7 +96,7 @@ class Prompts:
             Connection point on which to inject a value
         '''
         while True:
-            cp = input("\nWhich connection point do you want to inject on the parameter? ")
+            cp = input("\n" + self.inputs['cp_to_inject'])
 
             is_valid = self.is_digit_and_in_range(cp, i)
 
@@ -109,7 +121,7 @@ class Prompts:
             Value to inject on the connection point
         '''
         while True:
-            value = input("\nWhich value do you want to inject on the connection point? ")
+            value = input("\n" + self.inputs['cp_value'])
 
             is_valid = self.is_digit_and_in_range(value, i)
 
@@ -133,16 +145,16 @@ class Prompts:
             1 if connection point, the value to inject if manually
         '''
         while True:
-            opt = input("\nDo you want to inject a connection point (1), or add the value manually (2)? ")
+            opt = input("\n" + self.inputs['inject_cp_or_manually'])
 
             if opt not in ["1", "2"]:
-                print(f"\nERROR! The value must be \'1\' or \'2\'")
+                print("\n" + self.inputs['error_1_or_2'])
                 continue
             else:
                 if opt == "1":
                     return 1
                 else:
-                    value = input(f"Enter the value to manually inject: ")
+                    value = input(self.inputs['cp_value'])
 
                 return value
             
@@ -188,7 +200,7 @@ class Prompts:
             Testbed
         '''
         while True:
-            value = input("\nChoose the preferred test bed: ")
+            value = input("\n" + self.inputs['preferred_testbed'])
 
             is_valid = self.is_digit_and_in_range(value, i)
 
@@ -215,18 +227,18 @@ class Prompts:
             Testcase
         '''
         while True:
-            opt = self.yes_and_no_prompt("Do you wish to manually set a parameter?")
+            opt = self.yes_and_no_prompt(self.inputs['manually_set_param'])
 
             if opt == 0:
                 break
             
             while True:
-                parameter = input("\nChoose the parameter: ")
+                parameter = input("\n" + self.inputs['choose_param'])
 
                 is_valid = self.is_digit_and_in_range(parameter, i)
 
                 if is_valid == 0:
-                    value = input("Enter the value to inject on the parameter: ")
+                    value = input(self.inputs['value_to_inject'])
                     testcase.add_parameter(
                         {'key': test['test_variables'][int(parameter) - 1]['variable_name'],
                         'value': value}
@@ -234,6 +246,3 @@ class Prompts:
                     break
 
         return testcase
-
-
-            

@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-03 23:41:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-10 16:22:34
+# @Last Modified time: 2023-04-14 18:28:36
 
 # OS
 import os
@@ -33,13 +33,15 @@ class TestingDescriptorGenerator:
         self.state = state
         self.file_reader = FileReader()
         self.prompts = Prompts()
+        self.api_client = CICDManagerAPIClient()
+        self.inputs = self.file_reader.read_inputs()
 
     def create_testing_descriptor(
-    self,
-    config_file: str,
-    output_filename: str,
-    clear_executions: bool,
-    infer_tags_from_nsd: Optional[List[str]]
+        self,
+        config_file: str,
+        output_filename: str,
+        clear_executions: bool,
+        infer_tags_from_nsd: Optional[List[str]]
     ):
         '''
         Create tests descriptor from a given config.yaml containing the intended tests
@@ -66,7 +68,6 @@ class TestingDescriptorGenerator:
         -------
         None
         '''
-
         infering = False
         connection_points = []
         connection_point_values = {}
@@ -78,33 +79,28 @@ class TestingDescriptorGenerator:
             connection_point_values = self.file_reader.read_connection_point_values()
 
         else:
-            opt = self.prompts.yes_and_no_prompt("Are you sure you want to continue without providing a NSD?")
+            opt = self.prompts.yes_and_no_prompt(
+                    "\n" + self.inputs['continue_without_nsd']
+                )
 
             if opt == 0:
                 infering = True
                 
-                d = input("\nEnter the location of the descriptors, separated by a \",\": ")
+                d = input(self.inputs['descriptors_location'])
                 descriptors = [os.path.basename(path) for path in d.split(",")]
 
                 connection_points = self.infer_tags(d.split(","))
                 connection_point_values = self.file_reader.read_connection_point_values()
 
-        if infering and self.state["verbose"]: 
-                print(f"\nInfering tags from the following descriptors: {descriptors}")
-
-        if self.state["verbose"]: 
-            print("\nReading configuration file...")
-
         intended_tests = self.file_reader.read_intended_tests(config_file)
 
-        if self.state["verbose"]: 
-            print("Configuration file read!")
-
         # user's input - network application's name
-        netapp_name = input("Network Application's name: ")
+        netapp_name = input(self.inputs['network_app_name'])
         
         # user's input - test bed
-        testbeds = self.get_all_testbeds()
+        testbeds = self.api_client.get_all_testbeds()
+        print("\n")
+        
         for i, testbed in enumerate(testbeds, 1):
             print(f"Available testbeds: {testbed['name']} ({i})")
             
@@ -112,7 +108,9 @@ class TestingDescriptorGenerator:
         testbed_name = testbeds[testbed - 1]['id']
 
         # user's input - descriptor's description 
-        description = input("Description: ")
+        description = input(
+            "\n" + self.inputs['descriptor_description']
+        )
 
         # testing descriptor from testing-descriptor_nods.yaml
         tests = self.file_reader.read_testing_descriptors()
@@ -138,7 +136,9 @@ class TestingDescriptorGenerator:
         cleared_tests['test_info']['testbed_id'] = testbed_name
         cleared_tests['test_info']['description'] = description
 
-        configure_testcase = self.prompts.yes_and_no_prompt("Do you want to configure a test case?")
+        configure_testcase = self.prompts.yes_and_no_prompt(
+                                self.inputs['configure_a_testcase']
+                            )
         
         if configure_testcase:
             # add intended tests to testcases
@@ -152,18 +152,13 @@ class TestingDescriptorGenerator:
         else:
             descriptor = cleared_tests
 
-        if self.state["verbose"]: 
-            print("Creating the descriptor...")
-
         # save data to the descriptor
-        with open("../../" + output_filename, "w") as file:
+        generated_descriptor_path = "../../generated_descriptor/"
+        with open(generated_descriptor_path + output_filename, "w") as file:
             try:
                 yaml.dump(descriptor, file)
             except YAMLError as exc:
                 print(exc)
-
-        if self.state["verbose"]:
-            print("\nDescriptor generated!")
             
 
     def list_available_tests(self):
@@ -275,7 +270,15 @@ class TestingDescriptorGenerator:
             print(f"\n\tTest: {test['name']}")
             print(f"\n\tType: {test['test_type']}")
             print(f"\n\tDescription: {test['description']}")
-            opt = self.prompts.yes_and_no_prompt("Do you want to configure this testcase?")
+            print("\n\tParameters: " 
+                  + ", ".join(
+                    [variable['variable_name'] \
+                    for variable in test['test_variables']]
+                    )
+                )
+            opt = self.prompts.yes_and_no_prompt(
+                "\n" + self.inputs['configure_this_testcase']
+            )
 
             if opt == 0:
                 continue
@@ -393,29 +396,3 @@ class TestingDescriptorGenerator:
             parser.parse_descriptor()
 
         return parser.interfaces
-    
-
-    def get_all_testbeds(self):
-        api_client = CICDManagerAPIClient()
-        testbeds = api_client.get_all_testbeds()
-
-        if testbeds:
-            return testbeds
-        
-        
-    def get_all_tests(self):
-        api_client = CICDManagerAPIClient()
-        tests = api_client.get_all_tests()
-
-        if tests:
-            return tests
-        
-    
-    def get_tests_per_testbed(self, testbed: str):
-        api_client = CICDManagerAPIClient()
-        tests = api_client.get_tests_per_testbed(testbed)
-
-        if tests:
-            return tests
-
-        
