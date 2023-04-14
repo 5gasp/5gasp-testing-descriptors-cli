@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-03 23:41:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-04 16:45:02
+# @Last Modified time: 2023-04-05 15:02:46
 
 # OS
 import sys
@@ -11,14 +11,15 @@ import os
 # Python
 from typing import List, Optional
 
-#ruamel.yaml
+# ruamel.yaml
 from ruamel.yaml import YAML
 from ruamel.yaml.error import YAMLError
 
+# Modules
 from Testcase.testcase import Testcase
 from Execution.execution import Execution
 from Parser.parser import InjectedTagsParser
-from FileReader.reader import FileReader
+from helpers.FileReader.reader import FileReader
 from helpers.Prompt.prompts import Prompts
 
 yaml = YAML()
@@ -146,7 +147,7 @@ class TestingDescriptorGenerator:
         print("\nThe following tests can be injected on the testing descriptor:\n")
         
         for i, test in enumerate(tests, 1):
-            print(f"{i} - {test}")
+            print(f"{i} - {test} - {tests[test]['description']}")
             
         test_number = self.prompts.info_about_test(i)
             
