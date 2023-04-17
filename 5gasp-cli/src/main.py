@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-04 01:19:51
+# @Last Modified time: 2023-04-17 15:09:36
 
 # Python
 from typing import List, Optional
@@ -21,7 +21,7 @@ def create_tests(
     config_file: str = typer.Option(None, 
                                         help = "Name of the config file \
                                         containing the desired test' names"),
-    output_filename: str = typer.Option("testing-descriptor.yaml", 
+    output_filename: str = typer.Option("../../generated_descriptor/testing-descriptor.yaml", 
                                         help = "Output filename"),
     clear_executions: bool = typer.Option(False, 
                                         help = "Clear executions"),

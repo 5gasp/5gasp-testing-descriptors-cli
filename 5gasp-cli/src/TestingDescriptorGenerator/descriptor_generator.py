@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-03 23:41:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-14 18:28:36
+# @Last Modified time: 2023-04-17 15:07:18
 
 # OS
 import os
@@ -153,8 +153,7 @@ class TestingDescriptorGenerator:
             descriptor = cleared_tests
 
         # save data to the descriptor
-        generated_descriptor_path = "../../generated_descriptor/"
-        with open(generated_descriptor_path + output_filename, "w") as file:
+        with open(output_filename, "w") as file:
             try:
                 yaml.dump(descriptor, file)
             except YAMLError as exc:
