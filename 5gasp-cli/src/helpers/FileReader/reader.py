@@ -17,6 +17,7 @@ yaml.default_flow_style = False
 class FileReader:
     def __init__(self):
         self.RESOURCES_DIR = "../../resources/"
+        
 
     def read_intended_tests(self, config_file):
         '''
@@ -105,10 +106,10 @@ class FileReader:
         except FileNotFoundError as e:
             print(f"Error! File connection_point_values.yaml not found!")
             return sys.exit(0)
-
+        
         return connection_point_values['values']
     
-
+    
     def read_inputs(self):
         '''
         Read inputs for prompts from inputs.yaml

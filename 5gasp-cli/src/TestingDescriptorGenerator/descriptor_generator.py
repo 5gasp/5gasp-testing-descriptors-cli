@@ -171,7 +171,7 @@ class TestingDescriptorGenerator:
         print("\nThe following tests can be injected on the testing descriptor:\n")
         
         for i, test in enumerate(tests, 1):
-            print(f"{i} - {test}")
+            print(f"{i} - {test} - {tests[test]['description']}")
             
         test_number = self.prompts.info_about_test(i)
             
