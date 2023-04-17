@@ -2,30 +2,68 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-04 16:39:57
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-04 16:44:52
+# @Last Modified time: 2023-04-14 18:37:28
 
 # OS 
+import os
 import sys
+
+# ruamel.yaml
+from ruamel.yaml import YAML
+
+from ..FileReader.reader import FileReader
+
+yaml = YAML()
 
 class Prompts:
 
-    def continue_without_nsd(self):
+    def __init__(self):
+        reader = FileReader()
+        self.inputs = reader.read_inputs()
+
+    def yes_and_no_prompt(self, prompt: str):
+        '''
+        Prompt
+
+        Parameters
+        ----------
+        prompt: str
+            Text to be prompted
+
+        Returns
+        -------
+        opt : bool
+            1 if yes else 0
+        '''
         while True:
-            opt = input("\nAre you sure you want to continue without providing a NSD? [y/n]: ")
+            opt = input(f"\n{prompt} [y/n]: ")
 
             if opt not in ["y", "n"]:
-                print(f"\nERROR! The value must be \'y\' or \'n\'")
+                print("\n" + self.inputs['error_y_or_n'])
                 continue
             else:
-                return opt
+                return 0 if opt == "n" else 1
             
 
     def info_about_test(self, i: int):
+        '''
+        Prompt
+
+        Parameters
+        ----------
+        i: int
+            Range of values to accept
+
+        Returns
+        -------
+        test_number : int
+            Number of the test
+        '''
         while True:
-            opt = input("\nDo you wish to see some information about a test? [y/n]: ")
+            opt = input("\n" + self.inputs['info_about_test'])
 
             if opt not in ["y", "n"]:
-                print(f"\nERROR! The value must be \'y\' or \'n\'")
+                print("\n" + self.inputs['error_y_or_n'])
                 continue
             else:
                 if opt == "n":
@@ -44,8 +82,21 @@ class Prompts:
             
 
     def connection_point_to_inject(self, i: int):
+        '''
+        Prompt
+
+        Parameters
+        ----------
+        i: int
+            Range of values to accept
+
+        Returns
+        -------
+        cp : int
+            Connection point on which to inject a value
+        '''
         while True:
-            cp = input("\nWhich connection point do you want to inject on the parameter? ")
+            cp = input("\n" + self.inputs['cp_to_inject'])
 
             is_valid = self.is_digit_and_in_range(cp, i)
 
@@ -56,14 +107,55 @@ class Prompts:
     
     
     def value_to_inject_on_connection_point(self, i: int):
+        '''
+        Prompt
+
+        Parameters
+        ----------
+        i: int
+            Range of values to accept
+
+        Returns
+        -------
+        value : int
+            Value to inject on the connection point
+        '''
         while True:
-            value = input("\nWhich value do you want to inject on the connection point? ")
+            value = input("\n" + self.inputs['cp_value'])
 
             is_valid = self.is_digit_and_in_range(value, i)
 
             if is_valid:
                 continue
             else: 
+                return value
+            
+    def connection_point_or_manually(self):
+        '''
+        Prompt
+
+        Parameters
+        ----------
+        i: int
+            Range of values to accept
+
+        Returns
+        -------
+        value : str
+            1 if connection point, the value to inject if manually
+        '''
+        while True:
+            opt = input("\n" + self.inputs['inject_cp_or_manually'])
+
+            if opt not in ["1", "2"]:
+                print("\n" + self.inputs['error_1_or_2'])
+                continue
+            else:
+                if opt == "1":
+                    return 1
+                else:
+                    value = input(self.inputs['cp_value'])
+
                 return value
             
     
@@ -76,7 +168,7 @@ class Prompts:
         value : str
             Value to be verified
         i : int
-            Maximum range
+            Range of values to accept
         
         Returns
         -------
@@ -91,3 +183,66 @@ class Prompts:
                 return 1
             else:
                 return 0
+            
+    
+    def choose_testbed(self, i: int):
+        '''
+        Prompt
+
+        Parameters
+        ----------
+        i: int
+            Range of values to accept
+
+        Returns
+        -------
+        value : int
+            Testbed
+        '''
+        while True:
+            value = input("\n" + self.inputs['preferred_testbed'])
+
+            is_valid = self.is_digit_and_in_range(value, i)
+
+            if not is_valid:
+                return int(value)
+            
+    
+    def configure_testcase_parameter(self, test, testcase, i):
+        '''
+        Prompt
+
+        Parameters
+        ----------
+        test: dict
+            Dictionary containing testing descriptors.
+        testcase: Testcase
+            Testcase to inject values
+        i: int
+            Range of values to accept
+
+        Returns
+        -------
+        value : int
+            Testcase
+        '''
+        while True:
+            opt = self.yes_and_no_prompt(self.inputs['manually_set_param'])
+
+            if opt == 0:
+                break
+            
+            while True:
+                parameter = input("\n" + self.inputs['choose_param'])
+
+                is_valid = self.is_digit_and_in_range(parameter, i)
+
+                if is_valid == 0:
+                    value = input(self.inputs['value_to_inject'])
+                    testcase.add_parameter(
+                        {'key': test['test_variables'][int(parameter) - 1]['variable_name'],
+                        'value': value}
+                    )
+                    break
+
+        return testcase

@@ -1,7 +1,7 @@
 # @Author: Rafael Direito
 # @Date:   01-06-2021 17:43:43
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-03-09 18:10:24
+# @Last Modified time: 2023-04-05 15:42:50
 ---
 tests:
   testbed_itav:
@@ -203,7 +203,7 @@ tests:
     open_ports:
       id: open_ports
       name: open ports
-      description: Validates the if a VM's open ports are the ones that should be opened
+      description: Validates if a VM's open ports are the ones that should be opened
       ftp_base_location: tests/open_ports/
       test_filename: testOpenPorts.robot
       test_type: Robot
