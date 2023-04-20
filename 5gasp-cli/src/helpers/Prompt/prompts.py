@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Eduardo Santos
 # @Date:   2023-04-04 16:39:57
-# @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-14 18:37:28
+# @Last Modified by:   Rafael Direito
+# @Last Modified time: 2023-04-20 11:53:38
 
 # OS 
 import os
@@ -206,7 +206,7 @@ class Prompts:
 
             if not is_valid:
                 return int(value)
-            
+
     
     def configure_testcase_parameter(self, test, testcase, i):
         '''
@@ -246,3 +246,17 @@ class Prompts:
                     break
 
         return testcase
+
+    def choose_until_valid_value(self, prompt: str, valid_values: list,
+                                 show_valid_values: bool = False):
+
+        if show_valid_values:
+            prompt = f"{prompt} [{', '.join(valid_values)}]: "
+
+        while True:
+            value = input("\n" + prompt)
+
+            if value in valid_values:
+                return value
+
+            print("Invalid value")
