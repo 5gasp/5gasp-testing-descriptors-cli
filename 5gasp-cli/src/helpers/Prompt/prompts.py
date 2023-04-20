@@ -2,11 +2,16 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-04 16:39:57
 # @Last Modified by:   Rafael Direito
-# @Last Modified time: 2023-04-20 11:53:38
+# @Last Modified time: 2023-04-20 17:23:35
 
 # OS 
 import os
 import sys
+from rich.console import Console
+from rich.text import Text
+from rich.panel import Panel
+from rich.align import Align
+from rich.console import Group
 
 # ruamel.yaml
 from ruamel.yaml import YAML
@@ -15,6 +20,54 @@ from ..FileReader.reader import FileReader
 
 yaml = YAML()
 
+
+def tests_per_testbed_prompt():
+    console = Console()    
+    group = Group(
+    Align.center("[b]In 5GASP, each testbed has its own specific tests.[/b]"),
+    Align.center(" "),
+    Align.center("Thus, we don't provide and overall view of the tests we " +
+                 "have in our ecosystem, but rather a testbed-level view " +
+                 "of the tests."),
+    Align.center("[b]This way, you must first choose a testbed on where " +
+                 "yourNetApp shall be deployed, valdiated and certified.[/b]"),
+    Align.center("Only after choosing the testbed you may list the tests " +
+                 "available in that facility."),
+    )
+    console.print(
+        Align.center(
+            Panel(
+                renderable=group,
+                title="5GASP's Tests",
+                expand=True
+            )
+        )
+    )
+
+def tests_testbeds_list_prompt():
+    console = Console()
+    console.print(
+        Align.center(
+            "\n[b]Testbeds Available for Network Applications Testing:[/b]\n"
+        )
+    )
+    
+def display_tests_for_testbed(testbed):
+    console = Console()
+    console.print(
+        "\n[b]" +
+        f"The Testbed '{testbed}' provides the following tests:".title() +
+        "[/b]\n"
+    )
+    
+def do_you_wish_to_see_test_information_prompt():
+    console = Console()
+    console.print(
+        "\n[b]You can see additional information about each of the tests.\n"+
+        "If you don't want to do so, just type 'exit'.[b]"
+    )
+    
+    
 class Prompts:
 
     def __init__(self):

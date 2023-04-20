@@ -2,7 +2,7 @@
 # @Author: Rafael Direito
 # @Date:   2023-04-20 13:03:58
 # @Last Modified by:   Rafael Direito
-# @Last Modified time: 2023-04-20 13:47:16
+# @Last Modified time: 2023-04-20 17:21:17
 
 from rich.panel import Panel
 
@@ -34,7 +34,7 @@ class Test:
                     )
                 )
 
-    def to_pannel(self):
+    def to_pannel(self, expand=None, width=None):
         panel_str = f"""
         [b]{self.name.title()} Test[/b]
 
@@ -61,7 +61,13 @@ class Test:
                 panel_str += "\t[blue]○ Possible Options:[/blue] "
                 panel_str += str(tv.possible_options) + "\n"
 
-        return Panel(renderable=panel_str, expand=False, width=65)
+        if expand:
+            print("dddd")
+            return Panel(renderable=panel_str, expand=True)
+        if width:
+            return Panel(renderable=panel_str, expand=False, width=width)
+        if not expand and not width:
+            return Panel(renderable=panel_str, expand=False, width=65)
 
 
 class TestVariable:
