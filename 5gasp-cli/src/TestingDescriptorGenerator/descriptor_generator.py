@@ -1,397 +1,446 @@
 # -*- coding: utf-8 -*-
 # @Author: Eduardo Santos
 # @Date:   2023-04-03 23:41:36
-# @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-04-17 15:07:18
+# @Last Modified by:   Rafael Direito
+# @Last Modified time: 2023-04-26 23:31:13
 
 # OS
 import os
-from re import sub
+from helpers.beatiful_prints import PrintAsTable, PrintAsPanelColumns
+from helpers import prompts
+import yaml
 
-# Python
-from typing import List, Optional
+from rich.prompt import Prompt, FloatPrompt, IntPrompt, Confirm
+from rich.text import Text
+from rich.console import Console
+from CICDManagerAPIClient.test_classes import TestCase
+from helpers.connection_point_tags import CONNECTION_POINT_TAGS
+from helpers.base_testing_decriptor import BASE_TESTING_DESCRIPTOR
 
-# ruamel.yaml
-from ruamel.yaml import YAML
-from ruamel.yaml.error import YAMLError
-
-# Modules
-from modules.Testcase.testcase import Testcase
-from modules.Execution.execution import Execution
-
-# Helpers
-from helpers.DescriptorParser.parser import InjectedTagsParser
-from helpers.FileReader.reader import FileReader
-from helpers.Prompt.prompts import Prompts
-from helpers.CICDManagerAPIClient.apli_client import CICDManagerAPIClient
-
-yaml = YAML()
-yaml.default_flow_style = False
 
 class TestingDescriptorGenerator:
-    def __init__(self, state):
-        self.state = state
-        self.file_reader = FileReader()
-        self.prompts = Prompts()
-        self.api_client = CICDManagerAPIClient()
-        self.inputs = self.file_reader.read_inputs()
+    def __init__(self, netapp_name, ns_name, testbed_id, tests,
+                 output_filepath, connection_points=None):
+        self.netapp_name = netapp_name
+        self.ns_name = ns_name
+        self.testbed_id = testbed_id
+        self.tests = tests
+        self.output_filepath = output_filepath
+        self.connection_points = connection_points
+        self.test_cases = []
+        self.tests_cases_ids_ordered_by_user = []
+        self.last_test_id = 1
 
-    def create_testing_descriptor(
-        self,
-        config_file: str,
-        output_filename: str,
-        clear_executions: bool,
-        infer_tags_from_nsd: Optional[List[str]]
-    ):
-        '''
-        Create tests descriptor from a given config.yaml containing the intended tests
-        
-        Parameters
-        ----------
-        config_file : str (optional)
-            A string representing the name of the config file containing 
-            the names of the intended tests.
-        output_filename : str (optional)
-            A string representing the name of the output file for the
-            test descriptor.
-        clear_executions : bool (optional)
-            A boolean flag indicating whether to clear previous test
-            execution history from the test descriptor before creating the new descriptor.
-        network_service_descriptor : list[str] (optional)
-            Network Service Descriptor to be used to infer tags 
-            (this option can be called multiple times)
-        infer_tags_from_nsd : list[str] (optional)
-            Network Service Descriptor to be used to infer tags 
-            (this option can be called multiple times)
-        
-        Returns
-        -------
-        None
-        '''
-        infering = False
-        connection_points = []
-        connection_point_values = {}
-        
-        if infer_tags_from_nsd:
-            infering = True
-            descriptors = [os.path.basename(path) for path in infer_tags_from_nsd]
-            connection_points = self.infer_tags(infer_tags_from_nsd)
-            connection_point_values = self.file_reader.read_connection_point_values()
+    def _show_test_info(self):
+        test_id = Prompt.ask(
+                "For which test do you wish to see additional information? ",
+                choices=[str(i) for i in range(1, len(self.tests)+1)]
+            )
+        panels = PrintAsPanelColumns(
+                panels=[self.tests[int(test_id)-1].to_panel(expand=True)]
+            )
+        panels.print()
 
-        else:
-            opt = self.prompts.yes_and_no_prompt(
-                    "\n" + self.inputs['continue_without_nsd']
-                )
+    def __test_variable_input(self, test_variable):
+        value = None
+        prompt = "Which value would you like to assign to the variable "\
+            f"'{test_variable.name}'?"
 
-            if opt == 0:
-                infering = True
-                
-                d = input(self.inputs['descriptors_location'])
-                descriptors = [os.path.basename(path) for path in d.split(",")]
+        if test_variable.can_be_injected_by_the_nods:
 
-                connection_points = self.infer_tags(d.split(","))
-                connection_point_values = self.file_reader.read_connection_point_values()
+            connection_points = []
+            connection_point_keys = list(CONNECTION_POINT_TAGS.keys())
 
-        intended_tests = self.file_reader.read_intended_tests(config_file)
+            for cps in self.connection_points.values():
+                connection_points += cps["connection_points"]
 
-        # user's input - network application's name
-        netapp_name = input(self.inputs['network_app_name'])
-        
-        # user's input - test bed
-        testbeds = self.api_client.get_all_testbeds()
-        print("\n")
-        
-        for i, testbed in enumerate(testbeds, 1):
-            print(f"Available testbeds: {testbed['name']} ({i})")
-            
-        testbed = self.prompts.choose_testbed(i)
-        testbed_name = testbeds[testbed - 1]['id']
+            # Prepare table printing
+            tmp_smaller_list = connection_points \
+                if len(connection_points) < len(connection_point_keys) \
+                else connection_point_keys
+            diff = abs(len(connection_points) - len(connection_point_keys))
+            tmp_smaller_list += [" "]*diff
 
-        # user's input - descriptor's description 
-        description = input(
-            "\n" + self.inputs['descriptor_description']
-        )
+            # Print Connection Points
+            panels = PrintAsTable(
+                header=["Connection Points", "Connection Point Keys"],
+                rows=[
+                    [connection_points[i], connection_point_keys[i]]
+                    for i
+                    in range(len(connection_points))
+                ]
+            )
+            panels.print()
 
-        # testing descriptor from testing-descriptor_nods.yaml
-        tests = self.file_reader.read_testing_descriptors()
+        # Ask for user's input
+        # If there are possible values, ask for one of them
+        if len(test_variable.possible_options) != 0:
+            value = Prompt.ask(prompt, choices=test_variable.possible_options)
+        elif test_variable.type == "str":
+            value = Prompt.ask(prompt)
+        elif test_variable.type == "float":
+            value = FloatPrompt.ask(prompt)
+        elif test_variable.type == "int":
+            value = IntPrompt.ask(prompt)
 
-        # tests info from test_information.yaml
-        tests_info = self.file_reader.read_tests_info()
+        console = Console()
+        variable_value_text = Text(f"{test_variable.name} = {value}\n",
+                                   style="red")
+        console.print(variable_value_text)
+        return value
 
-        # descriptor with cleared test cases
-        cleared_tests = self.reset_sections(tests, clear_executions)
-        
-        netapp_name = '_'.join(
-                            sub(
-                                '([A-Z][a-z]+)', 
-                                r' \1', 
-                                sub(
-                                    '([A-Z]+)', 
-                                    r' \1', 
-                                    netapp_name.replace('-', ' ')
-                                )
-                            ).split()).lower()
+    def _add_test(self):
+        console = Console()
 
-        cleared_tests['test_info']['netapp_id'] = netapp_name
-        cleared_tests['test_info']['testbed_id'] = testbed_name
-        cleared_tests['test_info']['description'] = description
+        test_id = Prompt.ask(
+                "Which test do you want to add to your Testing Descriptor? ",
+                choices=[str(i) for i in range(1, len(self.tests)+1)]
+            )
+        test_id = int(test_id) - 1
 
-        configure_testcase = self.prompts.yes_and_no_prompt(
-                                self.inputs['configure_a_testcase']
-                            )
-        
-        if configure_testcase:
-            # add intended tests to testcases
-            descriptor = self.add_tests_to_testcases(
-                            cleared_tests, 
-                            tests_info, 
-                            intended_tests, 
-                            connection_points,
-                            connection_point_values
-                        )
-        else:
-            descriptor = cleared_tests
+        test = self.tests[test_id]
 
-        # save data to the descriptor
-        with open(output_filename, "w") as file:
-            try:
-                yaml.dump(descriptor, file)
-            except YAMLError as exc:
-                print(exc)
-            
+        test_info = Text()
+        test_info.append(f"Configuring test '{test.name}'...\n", style="bold")
+        test_info.append("Test name: ", style="bold")
+        test_info.append(test.name + "\n")
+        test_info.append("Test Description: ", style="bold")
+        test_info.append(test.description + "\n")
+        test_info.append("\nConfiguring Test Variables...\n", style="bold")
+        console.print(test_info)
 
-    def list_available_tests(self):
-        '''
-        List available tests to developer
-        '''
-        tests = self.file_reader.read_tests_info()['tests']['testbed_itav']
+        test_id = int(test_id) - 1
 
-        tests_list = [test for test in tests]
-        
-        print("\nThe following tests can be injected on the testing descriptor:\n")
-        
-        for i, test in enumerate(tests, 1):
-            print(f"{i} - {test} - {tests[test]['description']}")
-            
-        test_number = self.prompts.info_about_test(i)
-            
-        test = tests_list[int(test_number) - 1]
+        # Save Test Case Definition
+        test_case = TestCase(test=test, test_case_id=self.last_test_id)
 
-        print(f"The chosen test was: {test}")
-        print("\nTest information:")
-        print(f"\nName: {tests[test]['name']}")
-        print(f"Description: \"{tests[test]['description']}\"")
-        print(f"Parameters/Variables:")
-
-        for parameter in tests[test]['test_variables']:
-            print(f"\n\tVariable name: {parameter['variable_name']}")
-            print(f"\tDescription: {parameter['description']}")
-        
-        self.list_available_tests()  
-
-
-    def reset_sections(self, tests: dict(), clear_executions: bool):
-        '''
-        Reset user-given sections to later be filled by the developer
-
-        Parameters
-        ----------
-        tests : dict
-            Dictionary containing testing descriptors.
-        clear_executions : bool
-            Boolean for whether to clear existing executions.
-        
-        Returns
-        -------
-        tests: dict
-            Updated testing descriptors.
-        '''
-
-        del tests['test_info']['network_service_id']
-
-        # clear testcases
-        tests['test_phases']['setup']['testcases'].clear()
-        
-        if clear_executions:
-        
-            tests['test_phases']['execution'].clear()
-
-            execution = Execution(1, "", [1])
-            
-            execution.create_execution()
-
-            tests['test_phases']['execution'] = [
-                    {"batch_id": 1,"executions": [execution.execution]}
-            ]
-
-        return tests
-
-
-    def add_tests_to_testcases(
-            self,
-            tests: dict(), 
-            tests_info: dict(), 
-            intended_tests: dict(),
-            connection_points = {},
-            connection_point_values = {}
-            ):
-        '''
-        Add developer given tests to the testcases
-
-        Parameters
-        ----------
-        tests : dict
-            Dictionary containing testing descriptors.
-        tests_info : dict
-            Dictionary containing tests info.
-        intended_tests : bool
-            Dictionary containing tests to be added.
-        connection_points : list
-            Connection points infered from NSD(s)
-        connection_point_values : dict
-            Possible values for the connection points.
-        
-        Returns
-        -------
-        tests : dict
-            Updated testing descriptors.
-        '''
-
-        # existing tests
-        test_types = tests_info['tests']['testbed_itav']
-
-        intended_test_types = [type for type in test_types 
-                                if type in intended_tests['tests']]
-        
-        for i, test in enumerate(intended_test_types, 1):
-            test = test_types[test]
-
-            print(f"\n\tTest: {test['name']}")
-            print(f"\n\tType: {test['test_type']}")
-            print(f"\n\tDescription: {test['description']}")
-            print("\n\tParameters: " 
-                  + ", ".join(
-                    [variable['variable_name'] \
-                    for variable in test['test_variables']]
-                    )
-                )
-            opt = self.prompts.yes_and_no_prompt(
-                "\n" + self.inputs['configure_this_testcase']
+        for test_variable in test.test_variables:
+            console.print(
+                test_variable.to_panel(test.name)
             )
 
-            if opt == 0:
-                continue
+            if test_variable.can_be_injected_by_the_nods:
+                text = Text("This variable can be injected by the " +
+                            "NODS. You may rely on the inferred " +
+                            "connection points..", style="bold")
+                console.print(text)
 
-            testcase = Testcase(
-                            id = i,
-                            type = test['test_type'],
-                            name = test['name'],
-                            description = test['description'],
-                        )
+            value = self.__test_variable_input(test_variable)
+            # Save Test Case Definition
+            test_case.add_test_variable(
+                key=test_variable.name,
+                value=value
+            )
 
-            testcase.create_testcase()
+        description = Prompt.ask("How would you describe this Test Case")
+        test_case.description = description
 
-            # add parameters to testcase
-            t = self.add_parameters_to_testcase(
-                                                    test,
-                                                    connection_points, 
-                                                    connection_point_values, 
-                                                    testcase
-                                                )
-            # add testcase to tests
-            tests['test_phases']['setup']['testcases'].append(t.testcase)
+        console.print(test_case.to_panel(show_configured=True))
+        self.test_cases.append(test_case)
+        self.last_test_id += 1
 
-        return tests
-    
+    def _show_test_cases(self):
+        # Print Header
+        console = Console()
+        header = Text("\nYou already configured the following Test Cases:",
+                      style="bold")
+        console.print(header)
+        # Print all configured Test Cases
+        panels = [tc.to_panel(expand=False) for tc in self.test_cases]
+        panel_columns = PrintAsPanelColumns(panels)
+        panel_columns.print()
 
-    def add_parameters_to_testcase(
-            self, 
-            test,
-            connection_points, 
-            connection_point_values, 
-            testcase
-        ):
-        '''
-        Add parameter to the testcase
+    def _finish_test_cases_definition(self):
+        console = Console()
+        info = Text("\nYou have finished the Test Cases Definition.\n")
+        info.append("You can now choose if your Test Cases should be " +
+                    "executed in a specific order, or if the execution " +
+                    "order is irrelevant.", style="bold")
+        console.print(info)
 
-        Parameters
-        ----------
-        test: dict
-            Dictionary containing testing descriptors.
-        connection_points : list
-            Connection points infered from NSD(s).
-        connection_point_values : dict
-            Possible values for the connection points.
-        testcase: dict
-            Testcase 
-        
-        Returns
-        -------
-        testcase : dict
-            Updated testcase.
-        '''
-        for variable in test['test_variables']:
-            tag = ""
+        execution_order_is_required = Confirm.ask(
+            "\nDo you wish to execute the defined Test Cases in a specific " +
+            "order?"
+            )
 
-            if connection_points \
-                and "injected_by_nods" in variable \
-                and variable['injected_by_nods'] \
-                and variable['injected_artifact_type'] == "connection_point":
+        if execution_order_is_required:
+            self._set_tests_execution_order()
+        else:
+            self.tests_cases_ids_ordered_by_user = [
+                tc.test_case_id
+                for tc
+                in self.test_cases
+            ]
 
-                print(f"\nThe {variable['variable_name']} parameter must have a connection point injected")
-                print("\nThe following connection points were infered from the given NSD(s):")
+    def _set_tests_execution_order(self):
+        self._show_test_cases()
 
-                for i, connection_point in enumerate(connection_points, 1):
-                    print(f"{i} - {connection_point}")
+        # Print Header
+        console = Console()
+        header = Text("\nYou can now define the execution order of the " +
+                      "configured Test Cases.\nTo do so, please keep " +
+                      "choosing the next test that shall be executed, until " +
+                      "you have chosen all Test Cases.", style="bold"
+                      )
+        console.print(header)
 
-                opt = self.prompts.connection_point_or_manually()
-                
-                if opt == 1:
-                    cp = self.prompts.connection_point_to_inject(i)
+        # Initial Test Cases IDs
+        test_cases_ids = sorted([tc.test_case_id for tc in self.test_cases])
+        tests_cases_ids_ordered_by_user = []
+        while len(test_cases_ids) > 0:
+            test_case_id = Prompt.ask(
+                "Which is the next Test Case to execute? ",
+                choices=[str(i) for i in test_cases_ids]
+            )
 
-                    print("\nThe following values can be injected into the connection point:")
+            test_case_id = int(test_case_id)
+            tests_cases_ids_ordered_by_user.append(test_case_id)
+            test_cases_ids.remove(test_case_id)
+            test_cases_ids = sorted(test_cases_ids)
 
-                    for i, connection_point_value in enumerate(connection_point_values, 1):
-                        print(f"{i} - {connection_point_value}")
+        # Present Test Cases Execution Order to the User
+        order_info = Text("\nThe Test Cases will be performed according " +
+                          "to the following order: ", style="bold")
+        order_info.append(str(tests_cases_ids_ordered_by_user), style="red")
+        console.print(order_info)
 
-                    value = self.prompts.value_to_inject_on_connection_point(i)
-                        
-                    tag = connection_points[int(cp) - 1][:-2] + "|" \
-                            + connection_point_values[int(value) - 1] + "}}"
+        self.tests_cases_ids_ordered_by_user = tests_cases_ids_ordered_by_user
+        return tests_cases_ids_ordered_by_user
+
+    def _edit_test_cases_delete(self):
+        test_id = Prompt.ask(
+            "Which Test Case do you want to delete ('back' to go " +
+            "back to the previous menu)?",
+            choices=[str(tc.test_case_id) for tc in self.test_cases] +
+            ["back"],
+        )
+
+        if test_id == "back":
+            return
+
+        delete = Confirm.ask("Are you sure you want to delete the " +
+                             f"Test Case with the ID {test_id}?"
+                             )
+
+        # Delete the Test Case
+        if delete:
+            for tc in self.test_cases:
+                if str(tc.test_case_id) == test_id:
+                    del self.test_cases[self.test_cases.index(tc)]
+                    break
+
+    def _edit_test_cases_edit(self):
+        console = Console()
+
+        test_id = Prompt.ask(
+            "Which Test Case do you want to edit ('back' to go " +
+            "back to the previous menu)?",
+            choices=[str(tc.test_case_id) for tc in self.test_cases] +
+            ["back"],
+        )
+
+        if test_id == "back":
+            return
+
+        # gather the test case
+        test_case = None
+        for tc in self.test_cases:
+            if str(tc.test_case_id) == test_id:
+                test_case = tc
+                break
+
+        console.print(Text("\nTest Case Information:", style="bold"))
+
+        panels = PrintAsPanelColumns(panels=[test_case.test.to_panel()])
+        panels.print()
+
+        console.print(Text("\nCurrent Test Case Definition:", style="bold"))
+
+        panels = PrintAsPanelColumns(
+            panels=[test_case.to_panel()]
+        )
+        panels.print()
+
+        for variable, value in test_case.test_variables.items():
+            info = Text()
+            info.append("\nTest Variable: ", style="bold")
+            info.append(variable + "\n")
+            info.append("Current Value: ", style="bold")
+            info.append(str(value) + "\n")
+            console.print(info)
+
+            edit = Confirm.ask("Do you want to edit this variable " +
+                               f"({variable})?")
+            if edit:
+                # print Test Information
+                new_value = Prompt.ask("New Value")
+                test_case.add_test_variable(variable, new_value)
+
+    def _edit_test_cases(self):
+        # Print Header
+        self._show_test_cases()
+        show_test_cases = False
+
+        op = ""
+        while op != 'back':
+            op = Prompt.ask(
+                    "Do you want to edit or delete a Test Case ('back' "
+                    "to go back to the main menu)? ",
+                    choices=["edit", "delete", "back"],
+                )
+
+            if op == "back":
+                break
+            elif op == "delete":
+                if show_test_cases:
+                    self._show_test_cases()
+                self._edit_test_cases_delete()
+            elif op == "edit":
+                self._edit_test_cases_edit()
+
+            show_test_cases = True
+
+    def _test_cases_prompt(self):
+        panels = PrintAsTable(
+            header=["ID", "Test Name", "Test Description"],
+            rows=[
+                [str(i+1), self.tests[i].name, self.tests[i].description]
+                for i
+                in range(len(self.tests))
+            ]
+        )
+        prompts.display_tests_for_testbed(self.testbed_id)
+        panels.print()
+
+    def _confirm_testing_descriptor_output_file(self):
+        console = Console()
+        location_ok = False
+
+        while not location_ok:
+            info = Text()
+            info.append("\nThe Testing Descriptor will be saved in the " +
+                        "folllowing file: ", style="bold")
+            info.append(self.output_filepath + "\n")
+            console.print(info)
+            change_filepath = Confirm.ask(
+                "Do you wish to save the Testing Descriptor in a different " +
+                "file?")
+
+            if not change_filepath:
+                location_ok = True
+            else:
+                file_path = Prompt.ask(
+                    "Provide the file path where the Testing Descriptor " +
+                    "should be saved ('back' to go back to the main menu)?")
+
+                if file_path == "back":
+                    continue
+
+                elif os.path.isfile(file_path):
+                    location_ok = True
+                    self.output_filepath = file_path
+
+                elif os.path.isdir(file_path):
+                    self.output_filepath = os.path.join(
+                        file_path,
+                        "testing-descriptor.yaml"
+                    )
+                    location_ok = True
                 else:
-                    tag = opt
-            
-            testcase.add_parameter({'key': variable['variable_name'], 'value': tag})
+                    print(file_path)
+                    print(os.path.isdir(file_path))
+                    print(os.path.isfile(file_path))
+                    info = Text("Impossible to save the Testing Descriptor " +
+                                "in the specified location " +
+                                f"{self.output_filepath}!",
+                                style="red")
+                    console.print(info)
 
-        i = 0
-        print("\nThe testcase has also the following parameters:\n")
-        for variable in test['test_variables']:
-            if not "injected_by_nods" in variable or \
-                ("injected_by_nods" in variable and not variable['injected_by_nods']):
-                    i += 1
-                    print(f"{i} - {variable['variable_name']}")
+            info = Text()
+            info.append("\nThe Testing Descriptor will be saved in the " +
+                        "folllowing file: ", style="bold")
+            info.append(self.output_filepath + "\n")
+            console.print(info)
+        return True
 
-        testcase = self.prompts.configure_testcase_parameter(test, testcase, i)
+    def _save_testing_decritptor(self):
+        testing_descriptor = BASE_TESTING_DESCRIPTOR
+        testing_descriptor["test_info"]["netapp_id"] = self.netapp_name
+        testing_descriptor["test_info"]["network_service_id"] = self.ns_name
+        testing_descriptor["test_info"]["testbed_id"] = self.testbed_id
+        testing_descriptor["test_info"]["description"] = "Testing "\
+            f"Descriptor for the {self.netapp_name} Network Application"
 
-        return testcase
+        testcases = []
+        for tc in self.test_cases:
+            tc_dict = {
+                "testcase_id": tc.test_case_id,
+                "type": tc.test.test_type,
+                "name": tc.test.id,
+                "description": tc.description,
+                "parameters": []
+            }
+            for key, value in tc.test_variables.items():
+                tc_dict["parameters"].append(
+                    {
+                        "key": key,
+                        "value": value
+                    }
+                )
 
+            testcases.append(tc_dict)
 
-    def infer_tags(self, network_service_descriptor: list()):
-        '''
-        Infer tags from given NSD(s)
+        testing_descriptor["test_phases"]["setup"]["testcases"] = testcases
+        testing_descriptor["test_phases"]["execution"][0]["executions"]\
+            [0]["testcase_ids"] = self.tests_cases_ids_ordered_by_user
 
-        Parameters
-        ----------
-        network_service_descriptor : list[str]
-            List with NSDs to be used to infer tags 
+        with open(self.output_filepath, 'w') as output_file:
+            yaml.dump(
+                testing_descriptor,
+                output_file,
+                default_flow_style=False,
+                sort_keys=False
+            )
 
-        Returns
-        -------
-        tags : dict
-            Connection points infered.
-        '''
-        for descriptor in network_service_descriptor:
-            parser = InjectedTagsParser(descriptor)
-            parser.parse_descriptor()
+        console = Console()
+        console.print(Text("Generated Testing Descriptor:", style="bold"))
 
-        return parser.interfaces
+        print(
+            yaml.dump(
+                testing_descriptor,
+                default_flow_style=False,
+                sort_keys=False
+            )
+        )
+
+        info = Text()
+        info.append("\nThe Testing Descriptor was saved in the " +
+                    "folllowing file: ", style="bold")
+        info.append(self.output_filepath)
+        console.print(info)
+
+    def _test_cases_menu(self):
+
+        while True:
+            # Show testcases
+            self._test_cases_prompt()
+
+            # Present the Menu to the developer
+            op = prompts.test_cases_operation()
+
+            if op == "add":
+                self._add_test()
+            if op == "show":
+                self._show_test_cases()
+            if op == "info":
+                self._show_test_info()
+            if op == "edit":
+                self._edit_test_cases()
+            if op == "finish":
+                self._finish_test_cases_definition()
+                if self._confirm_testing_descriptor_output_file():
+                    break
+
+    def create_testing_descriptor(self):
+        self._test_cases_menu()
+        self._save_testing_decritptor()

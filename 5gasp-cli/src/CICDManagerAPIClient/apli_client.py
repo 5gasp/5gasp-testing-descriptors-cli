@@ -2,19 +2,16 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-06 14:55:17
 # @Last Modified by:   Rafael Direito
-# @Last Modified time: 2023-04-20 13:44:14
+# @Last Modified time: 2023-04-26 23:36:13
 
 import requests
 from helpers import constants as Constants
-from helpers.CICDManagerAPIClient.test_classes import Test
-from rich.console import Console
-from rich.table import Table
-from rich.columns import Columns
-from rich.panel import Panel
+from CICDManagerAPIClient.test_classes import Test
+
 
 class CICDManagerAPIClient:
     def __init__(self):
-        self.base_url = "https://ci-cd-service.5gasp.eu/manager"
+        self.base_url = Constants.CI_CD_SERVICE_URL
 
     def get_all_testbeds(self):
         '''
@@ -56,9 +53,9 @@ class CICDManagerAPIClient:
         -------
             List of all tests.
         '''
-        path = None #ALL_TESTS_PATH
+        path = Constants.ALL_TESTS_PATH
         url = f"{self.base_url}/{path}"
-        
+
         try:
             response = requests.get(url)
             response.raise_for_status()

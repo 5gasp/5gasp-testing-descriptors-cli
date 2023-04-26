@@ -2,43 +2,137 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Rafael Direito
-# @Last Modified time: 2023-04-20 17:24:55
+# @Last Modified time: 2023-04-26 23:21:53
 
-# Python
 from typing import List, Optional
-import os
-from helpers import constants as Constants
-from helpers.CICDManagerAPIClient import apli_client as CICD_API_Client
-from helpers.Prompt import prompts 
 from helpers.beatiful_prints import PrintAsTable, PrintAsPanelColumns
 from rich.prompt import Prompt, Confirm
-# Typer
 import typer
 
-from TestingDescriptorGenerator.descriptor_generator import TestingDescriptorGenerator
+from CICDManagerAPIClient import apli_client as CICD_API_Client
+from DescriptorParser.parser import ConnectionPointsParser
+from TestingDescriptorGenerator.descriptor_generator import \
+    TestingDescriptorGenerator
+from helpers import constants as Constants
+from helpers import prompts
 
-app = typer.Typer(pretty_exceptions_show_locals = False)
+app = typer.Typer(pretty_exceptions_show_locals=False)
 state = {"verbose": False}
 
 
+def _list_testbeds(api_client, print_info=False, centered=False):
+    testbeds = api_client.get_all_testbeds()
+    # Print table with the available testbeds
+    if print_info:
+        table = PrintAsTable(
+            header=["ID", "Name", "Description"],
+            rows=[
+                [t["id"], t["name"], t["description"]]
+                for t
+                in testbeds
+            ]
+        )
+        table.print(centered=centered)
+    return testbeds
+
+
+def _list_tests(api_client, testbed_id, print_info=False, centered=False):
+    tests = api_client.get_tests_per_testbed(testbed_id)
+    if print_info:
+        panels = PrintAsPanelColumns(
+            panels=[t.to_panel() for t in tests]
+        )
+        panels.print(centered=centered)
+    return tests
+
+
 @app.command()
-def create_tests(
-    config_file: str = typer.Option(None, 
-                                        help = "Name of the config file \
-                                        containing the desired test' names"),
-    output_filename: str = typer.Option("../../generated_descriptor/testing-descriptor.yaml", 
-                                        help = "Output filename"),
-    clear_executions: bool = typer.Option(False, 
-                                        help = "Clear executions"),
-    infer_tags_from_nsd: Optional[List[str]] = typer.Option(None)
-    ):
-    descriptor_generator = TestingDescriptorGenerator(state)
-    descriptor_generator.create_testing_descriptor(
-                            config_file, 
-                            output_filename, 
-                            clear_executions, 
-                            infer_tags_from_nsd
-                        )
+def create_testing_descriptor(
+    output_filepath: str = typer.Option(
+        default="testing-descriptor.yaml",
+        help="Output filepath"
+    ),
+    infer_tags_from_nsd: Optional[List[str]] = typer.Option(
+        default=None
+    )
+):
+    # 1. Check if the developer wants to infer tags from an NSD
+    if infer_tags_from_nsd:
+
+        # Information Prompt
+        prompts.connection_points_information_prompt()
+
+        # Parse connection points information
+        tags_parser = ConnectionPointsParser(infer_tags_from_nsd)
+        existing_connect_points = tags_parser.connection_points
+
+        print("\nThe following NSDs can be used for inferring connection " +
+              "points:"
+              )
+
+        table = PrintAsTable(
+            header=["NSD's File Path", "NSD ID", "Inferred Connection Points"],
+            rows=[
+                [
+                    nsd_file_path,
+                    nsd_info["ns_id"],
+                    "\n".join(nsd_info["connection_points"])
+                ]
+                for nsd_file_path, nsd_info
+                in existing_connect_points.items()
+            ]
+        )
+        table.print()
+
+        prompts.connection_point_keys(
+            list(existing_connect_points.values())[0]["connection_points"][0]
+        )
+
+        # 2. Ask the developer if he wishes to proceed
+        proceed = Confirm.ask(
+            "\nDo you wish to proceed with the Test Descriptor's creation?"
+            )
+
+        # Exit if the developer does not want to proceed
+        if not proceed:
+            return
+
+        # 3. Ask for the Testing Descriptor initial information
+        netapp_name = input("\n" + Constants.USER_PROMPTS.NETAPP_NAME.value)
+        ns_name = input(Constants.USER_PROMPTS.NS_NAME.value)
+
+        api_client = CICD_API_Client.CICDManagerAPIClient()
+
+        # Print table with the available testbeds
+        # List Testbeds
+        testbeds = _list_testbeds(
+            api_client=api_client,
+            print_info=True,
+            centered=True
+        )
+        # Prompt to choose a testbed
+        testbed_id = Prompt.ask(
+            "\nIn which testbed do you want to validate your Network " +
+            "Application?",
+            choices=[t["id"] for t in testbeds]
+        )
+
+        tests = _list_tests(
+            api_client=api_client,
+            testbed_id=testbed_id,
+            print_info=False
+        )
+
+        generator = TestingDescriptorGenerator(
+            connection_points=existing_connect_points,
+            netapp_name=netapp_name,
+            ns_name=ns_name,
+            testbed_id=testbed_id,
+            tests=tests,
+            output_filepath=output_filepath
+        )
+
+        generator.create_testing_descriptor()
 
 
 @app.command()
@@ -46,19 +140,13 @@ def list_testbeds():
     '''
     List available testbeds
     '''
-    ApiClient = CICD_API_Client.CICDManagerAPIClient()
-    testbeds = ApiClient.get_all_testbeds()
+    api_client = CICD_API_Client.CICDManagerAPIClient()
 
-    # Print table with the available testbeds
-    table = PrintAsTable(
-        header=["ID", "Name", "Description"],
-        rows=[
-            [t["id"], t["name"], t["description"]]
-            for t
-            in testbeds
-        ]
+    # List Testbeds
+    testbeds = _list_testbeds(
+        api_client=api_client,
+        print_info=True
     )
-    table.print()
 
     # Ask the user if he wishes to list the available test cases in each of
     # the available testbeds
@@ -75,11 +163,11 @@ def list_testbeds():
 
         print(f"\nAvailable tests in testbed '{testbed_id}':\n")
 
-        tests = ApiClient.get_tests_per_testbed(testbed_id)
-        pannels = PrintAsPanelColumns(
-            pannels=[t.to_pannel() for t in tests]
+        _list_tests(
+            api_client=api_client,
+            testbed_id=testbed_id,
+            print_info=True
         )
-        pannels.print()
 
 
 @app.command()
@@ -87,37 +175,35 @@ def list_available_tests():
     '''
     List available tests to developer
     '''
-    
+
     prompts.tests_per_testbed_prompt()
-    
-    ApiClient = CICD_API_Client.CICDManagerAPIClient()
-    testbeds = ApiClient.get_all_testbeds()
 
-
-    # Print table with the available testbeds
-    table = PrintAsTable(
-        header=["ID", "Name", "Description"],
-        rows=[
-            [t["id"], t["name"], t["description"]]
-            for t
-            in testbeds
-        ]
-    )
-    
     # Print all the available testbeds
     prompts.tests_testbeds_list_prompt()
-    table.print(centered=True)
-    
+
+    ApiClient = CICD_API_Client.CICDManagerAPIClient()
+    # List Testbeds
+    testbeds = _list_testbeds(
+        api_client=ApiClient,
+        print_info=True,
+        centered=True
+    )
+
     # Prompt to choose a testbed
     testbed_id = Prompt.ask(
         "\nFor which testbed do you wish to list the available tests",
         choices=[t["id"] for t in testbeds]
     )
-    
+
     # List testbed's available tests
-    tests = ApiClient.get_tests_per_testbed(testbed_id)
-    while True:    
-        pannels = PrintAsTable(
+    tests = _list_tests(
+        api_client=ApiClient,
+        testbed_id=testbed_id,
+        print_info=False
+    )
+
+    while True:
+        panels = PrintAsTable(
             header=["ID", "Test Name", "Test Description"],
             rows=[
                 [str(i+1), tests[i].name, tests[i].description]
@@ -126,24 +212,24 @@ def list_available_tests():
             ]
         )
         prompts.display_tests_for_testbed(testbed_id)
-        pannels.print()
-        
+        panels.print()
+
         # Does the user wishes to see additional tests information?
-        
+
         prompts.do_you_wish_to_see_test_information_prompt()
-    
+
         test_details = Prompt.ask(
-                "For which test do you wish to see additional infromation? ",
-                choices=[str(i) for i in range(1, len(tests)+1)] + ["exit"] 
+                "For which test do you wish to see additional information? ",
+                choices=[str(i) for i in range(1, len(tests)+1)] + ["exit"]
             )
-        
+
         if test_details == "exit":
             break
-        
-        pannels = PrintAsPanelColumns(
-                pannels=[tests[int(test_details)-1].to_pannel(expand=True)]
+
+        panels = PrintAsPanelColumns(
+                panels=[tests[int(test_details)-1].to_panel(expand=True)]
             )
-        pannels.print()
+        panels.print()
 
 
 @app.callback()
@@ -151,11 +237,9 @@ def main(
     verbose: bool = False,
     ci_cd_manager_url: str = typer.Option(
         default=Constants.CI_CD_SERVICE_URL,
-        help="CI/CD Manager URL to override the default one.")
+        help="CI/CD Manager URL to override the default one."
+    )
 ):
-    """
-    5GASP CLI
-    """
     if verbose:
         print("Will write verbose output")
         state["verbose"] = True
