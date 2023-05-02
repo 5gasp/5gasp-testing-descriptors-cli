@@ -20,25 +20,41 @@ To list all parameters of a command, run:
 
     python3 main.py COMMAND --help
 
-Here are some examples:
+### CLI Commands
 
-1. Create a testing descriptor from a config file:
-
-```python
-python3 main.py create-tests --config-file "../../resources/config.yaml"
-```
-
-2. Infer tags from a NSD:
+#### List all tests from a test bed
 
 ```python
-python3 main.py create-tests --config-file "../../resources/config.yaml" --infer-tags-from-nsd "../../resources/hackfest_multivdu_nsd.yaml"
+python3 main.py list-testbeds
 ```
 
-3. List all available tests:
+#### List all available tests
 
 ```python
 python3 main.py list-available-tests
 ```
+
+#### Generate a testing descriptor:
+
+```python
+python3 main.py create-testing-descriptor
+```
+
+This command has the following options:
+
+* One or more NSDs (Network Service Descriptors) can be passed to infer connection point tags from, using the following command:
+
+```python
+python3 main.py create-testing-descriptor --infer-tags-from-nsd <nsd_location>
+```
+
+* The path of the generated descriptor can be passed using:
+
+```python
+python3 main.py create-testing-descriptor --output-filepath <path_to_file>
+```
+
+> **_NOTE:_** Both options can be used simultaneously
 
 ## Documentation
 
