@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Rafael Direito
-# @Last Modified time: 2023-04-26 23:21:53
+# @Last Modified time: 2023-05-02 17:10:52
 
 from typing import List, Optional
 from helpers.beatiful_prints import PrintAsTable, PrintAsPanelColumns
@@ -36,13 +36,13 @@ def _list_testbeds(api_client, print_info=False, centered=False):
     return testbeds
 
 
-def _list_tests(api_client, testbed_id, print_info=False, centered=False):
+def _list_tests(api_client, testbed_id, print_info=False):
     tests = api_client.get_tests_per_testbed(testbed_id)
     if print_info:
         panels = PrintAsPanelColumns(
             panels=[t.to_panel() for t in tests]
         )
-        panels.print(centered=centered)
+        panels.print()
     return tests
 
 
