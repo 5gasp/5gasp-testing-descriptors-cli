@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Eduardo Santos
 # @Date:   2023-04-03 23:41:36
-# @Last Modified by:   Rafael Direito
-# @Last Modified time: 2023-04-26 23:31:13
+# @Last Modified by:   Eduardo Santos
+# @Last Modified time: 2023-05-02 18:27:22
 
 # OS
 import os
@@ -15,7 +15,7 @@ from rich.text import Text
 from rich.console import Console
 from CICDManagerAPIClient.test_classes import TestCase
 from helpers.connection_point_tags import CONNECTION_POINT_TAGS
-from helpers.base_testing_decriptor import BASE_TESTING_DESCRIPTOR
+from helpers.base_testing_descriptor import BASE_TESTING_DESCRIPTOR
 
 
 class TestingDescriptorGenerator:

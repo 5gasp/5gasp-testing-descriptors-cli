@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
-# @Last Modified by:   Rafael Direito
-# @Last Modified time: 2023-05-02 17:10:52
+# @Last Modified by:   Eduardo Santos
+# @Last Modified time: 2023-05-02 18:30:05
 
 from typing import List, Optional
 from helpers.beatiful_prints import PrintAsTable, PrintAsPanelColumns
