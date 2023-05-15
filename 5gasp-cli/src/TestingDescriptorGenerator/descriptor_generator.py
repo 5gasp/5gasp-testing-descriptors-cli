@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-03 23:41:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-05-02 18:27:22
+# @Last Modified time: 2023-05-15 17:34:35
 
 # OS
 import os
@@ -46,7 +46,7 @@ class TestingDescriptorGenerator:
         prompt = "Which value would you like to assign to the variable "\
             f"'{test_variable.name}'?"
 
-        if test_variable.can_be_injected_by_the_nods:
+        if test_variable.can_be_injected_by_the_nods and self.connection_points:
 
             connection_points = []
             connection_point_keys = list(CONNECTION_POINT_TAGS.keys())
@@ -119,10 +119,17 @@ class TestingDescriptorGenerator:
                 test_variable.to_panel(test.name)
             )
 
-            if test_variable.can_be_injected_by_the_nods:
+            if test_variable.can_be_injected_by_the_nods and self.connection_points:
                 text = Text("This variable can be injected by the " +
                             "NODS. You may rely on the inferred " +
                             "connection points..", style="bold")
+                console.print(text)
+            
+            else:
+                text = Text("This variable can be injected by the " +
+                            "NODS, but no NSD was passed. You can inject the" +
+                            " values mannualy, or you can pass a descriptor" + 
+                            " to the CLI.", style="bold")
                 console.print(text)
 
             value = self.__test_variable_input(test_variable)

@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-05-02 22:48:45
+# @Last Modified time: 2023-05-15 17:05:45
 
 from typing import List, Optional
 from helpers.beatiful_prints import PrintAsTable, PrintAsPanelColumns
@@ -16,7 +16,7 @@ from TestingDescriptorGenerator.descriptor_generator import \
 from helpers import constants as Constants
 from helpers import prompts
 
-app = typer.Typer(pretty_exceptions_show_locals=False)
+app = typer.Typer()
 state = {"verbose": False}
 
 
@@ -97,42 +97,42 @@ def create_testing_descriptor(
         if not proceed:
             return
 
-        # 3. Ask for the Testing Descriptor initial information
-        netapp_name = input("\n" + Constants.USER_PROMPTS.NETAPP_NAME.value)
-        ns_name = input(Constants.USER_PROMPTS.NS_NAME.value)
+    # 3. Ask for the Testing Descriptor initial information
+    netapp_name = input("\n" + Constants.USER_PROMPTS.NETAPP_NAME.value)
+    ns_name = input(Constants.USER_PROMPTS.NS_NAME.value)
 
-        api_client = CICD_API_Client.CICDManagerAPIClient()
+    api_client = CICD_API_Client.CICDManagerAPIClient()
 
-        # Print table with the available testbeds
-        # List Testbeds
-        testbeds = _list_testbeds(
-            api_client=api_client,
-            print_info=True,
-            centered=True
-        )
-        # Prompt to choose a testbed
-        testbed_id = Prompt.ask(
-            "\nIn which testbed do you want to validate your Network " +
-            "Application?",
-            choices=[t["id"] for t in testbeds]
-        )
+    # Print table with the available testbeds
+    # List Testbeds
+    testbeds = _list_testbeds(
+        api_client=api_client,
+        print_info=True,
+        centered=True
+    )
+    # Prompt to choose a testbed
+    testbed_id = Prompt.ask(
+        "\nIn which testbed do you want to validate your Network " +
+        "Application?",
+        choices=[t["id"] for t in testbeds]
+    )
 
-        tests = _list_tests(
-            api_client=api_client,
-            testbed_id=testbed_id,
-            print_info=False
-        )
+    tests = _list_tests(
+        api_client=api_client,
+        testbed_id=testbed_id,
+        print_info=False
+    )
 
-        generator = TestingDescriptorGenerator(
-            connection_points=existing_connect_points,
-            netapp_name=netapp_name,
-            ns_name=ns_name,
-            testbed_id=testbed_id,
-            tests=tests,
-            output_filepath=output_filepath
-        )
+    generator = TestingDescriptorGenerator(
+        connection_points=existing_connect_points if infer_tags_from_nsd else None,
+        netapp_name=netapp_name,
+        ns_name=ns_name,
+        testbed_id=testbed_id,
+        tests=tests,
+        output_filepath=output_filepath
+    )
 
-        generator.create_testing_descriptor()
+    generator.create_testing_descriptor()
 
 
 @app.command()
