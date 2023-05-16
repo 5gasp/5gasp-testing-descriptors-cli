@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 # @Author: Eduardo Santos
 # @Date:   2023-04-06 14:55:17
-# @Last Modified by:   Rafael Direito
-# @Last Modified time: 2023-04-26 23:36:13
+# @Last Modified by:   Eduardo Santos
+# @Last Modified time: 2023-05-15 17:40:28
 
 import requests
-from helpers import constants as Constants
-from CICDManagerAPIClient.test_classes import Test
+from ..helpers import constants as Constants
+from ..CICDManagerAPIClient.test_classes import Test
 
 
 class CICDManagerAPIClient:

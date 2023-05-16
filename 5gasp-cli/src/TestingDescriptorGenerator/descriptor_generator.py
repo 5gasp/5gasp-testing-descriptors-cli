@@ -2,20 +2,20 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-03 23:41:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-05-15 17:34:35
+# @Last Modified time: 2023-05-15 18:12:08
 
 # OS
 import os
-from helpers.beatiful_prints import PrintAsTable, PrintAsPanelColumns
-from helpers import prompts
+from ..helpers.beatiful_prints import PrintAsTable, PrintAsPanelColumns
+from ..helpers import prompts
 import yaml
 
 from rich.prompt import Prompt, FloatPrompt, IntPrompt, Confirm
 from rich.text import Text
 from rich.console import Console
-from CICDManagerAPIClient.test_classes import TestCase
-from helpers.connection_point_tags import CONNECTION_POINT_TAGS
-from helpers.base_testing_descriptor import BASE_TESTING_DESCRIPTOR
+from ..CICDManagerAPIClient.test_classes import TestCase
+from ..helpers.connection_point_tags import CONNECTION_POINT_TAGS
+from ..helpers.base_testing_descriptor import BASE_TESTING_DESCRIPTOR
 
 
 class TestingDescriptorGenerator:

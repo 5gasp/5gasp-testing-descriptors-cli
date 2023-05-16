@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Eduardo Santos
 # @Date:   2023-04-04 16:39:57
-# @Last Modified by:   Rafael Direito
-# @Last Modified time: 2023-04-26 23:32:29
+# @Last Modified by:   Eduardo Santos
+# @Last Modified time: 2023-05-15 22:51:18
 
 from rich.console import Console
 from rich.text import Text
@@ -10,13 +10,9 @@ from rich.panel import Panel
 from rich.align import Align
 from rich.console import Group
 
-# ruamel.yaml
-from ruamel.yaml import YAML
-
-from helpers.connection_point_tags import CONNECTION_POINT_TAGS
-from helpers.beatiful_prints import PrintAsTable
+from ..helpers.connection_point_tags import CONNECTION_POINT_TAGS
+from ..helpers.beatiful_prints import PrintAsTable
 from rich.prompt import Prompt
-yaml = YAML()
 
 
 def test_cases_operation():

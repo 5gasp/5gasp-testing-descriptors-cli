@@ -2,19 +2,19 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-05-15 17:05:45
+# @Last Modified time: 2023-05-15 17:40:46
 
 from typing import List, Optional
-from helpers.beatiful_prints import PrintAsTable, PrintAsPanelColumns
+from .helpers.beatiful_prints import PrintAsTable, PrintAsPanelColumns
 from rich.prompt import Prompt, Confirm
 import typer
 
-from CICDManagerAPIClient import apli_client as CICD_API_Client
-from DescriptorParser.parser import ConnectionPointsParser
-from TestingDescriptorGenerator.descriptor_generator import \
+from .CICDManagerAPIClient import apli_client as CICD_API_Client
+from .DescriptorParser.parser import ConnectionPointsParser
+from .TestingDescriptorGenerator.descriptor_generator import \
     TestingDescriptorGenerator
-from helpers import constants as Constants
-from helpers import prompts
+from .helpers import constants as Constants
+from .helpers import prompts
 
 app = typer.Typer()
 state = {"verbose": False}
