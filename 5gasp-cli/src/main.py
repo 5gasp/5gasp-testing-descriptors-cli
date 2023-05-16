@@ -2,11 +2,13 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-05-15 17:40:46
+# @Last Modified time: 2023-05-16 16:39:14
 
 from typing import List, Optional
 from .helpers.beatiful_prints import PrintAsTable, PrintAsPanelColumns
 from rich.prompt import Prompt, Confirm
+from rich.text import Text
+from rich.console import Console
 import typer
 
 from .CICDManagerAPIClient import apli_client as CICD_API_Client
@@ -19,7 +21,7 @@ from .helpers import prompts
 app = typer.Typer()
 state = {"verbose": False}
 
-
+ 
 def _list_testbeds(api_client, print_info=False, centered=False):
     testbeds = api_client.get_all_testbeds()
     # Print table with the available testbeds
@@ -56,6 +58,9 @@ def create_testing_descriptor(
         default=None
     )
 ):
+    console = Console()
+    text = Text()
+    
     # 1. Check if the developer wants to infer tags from an NSD
     if infer_tags_from_nsd:
         
@@ -96,7 +101,7 @@ def create_testing_descriptor(
         # Exit if the developer does not want to proceed
         if not proceed:
             return
-
+    
     # 3. Ask for the Testing Descriptor initial information
     netapp_name = input("\n" + Constants.USER_PROMPTS.NETAPP_NAME.value)
     ns_name = input(Constants.USER_PROMPTS.NS_NAME.value)
@@ -122,6 +127,12 @@ def create_testing_descriptor(
         testbed_id=testbed_id,
         print_info=False
     )
+
+    if not infer_tags_from_nsd:
+        text = Text("\nAs there was no NSD passed, there are no connection " +
+                    "points to be inferred. You can enter them manually."
+                    , style="bold")
+        console.print(text)
 
     generator = TestingDescriptorGenerator(
         connection_points=existing_connect_points if infer_tags_from_nsd else None,
