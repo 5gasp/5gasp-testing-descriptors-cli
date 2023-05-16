@@ -2,11 +2,13 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-01 16:31:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-05-15 17:05:45
+# @Last Modified time: 2023-05-16 17:21:19
 
 from typing import List, Optional
 from helpers.beatiful_prints import PrintAsTable, PrintAsPanelColumns
 from rich.prompt import Prompt, Confirm
+from rich.text import Text
+from rich.console import Console
 import typer
 
 from CICDManagerAPIClient import apli_client as CICD_API_Client
@@ -56,6 +58,9 @@ def create_testing_descriptor(
         default=None
     )
 ):
+    console = Console()
+    text = Text()
+    
     # 1. Check if the developer wants to infer tags from an NSD
     if infer_tags_from_nsd:
         
@@ -122,6 +127,12 @@ def create_testing_descriptor(
         testbed_id=testbed_id,
         print_info=False
     )
+
+    if not infer_tags_from_nsd:
+        text = Text("\nAs there was no NSD passed, there are no connection " +
+                    "points to be inferred. You can enter them manually."
+                    , style="bold")
+        console.print(text)
 
     generator = TestingDescriptorGenerator(
         connection_points=existing_connect_points if infer_tags_from_nsd else None,

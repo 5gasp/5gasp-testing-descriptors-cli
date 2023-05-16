@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-04-03 23:41:36
 # @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-05-15 17:34:35
+# @Last Modified time: 2023-05-16 17:22:45
 
 # OS
 import os
@@ -354,20 +354,17 @@ class TestingDescriptorGenerator:
                     )
                     location_ok = True
                 else:
-                    print(file_path)
-                    print(os.path.isdir(file_path))
-                    print(os.path.isfile(file_path))
-                    info = Text("Impossible to save the Testing Descriptor " +
+                    info = Text("\nImpossible to save the Testing Descriptor " +
                                 "in the specified location " +
-                                f"{self.output_filepath}!",
+                                f"{file_path}! File or directory does not exist!",
                                 style="red")
                     console.print(info)
 
-            info = Text()
-            info.append("\nThe Testing Descriptor will be saved in the " +
-                        "folllowing file: ", style="bold")
-            info.append(self.output_filepath + "\n")
-            console.print(info)
+            #info = Text()
+            #info.append("\nThe Testing Descriptor will be saved in the " +
+            #            "folllowing file: ", style="bold")
+            #info.append(self.output_filepath + "\n")
+            #console.print(info)
         return True
 
     def _save_testing_decritptor(self):
@@ -410,7 +407,7 @@ class TestingDescriptorGenerator:
             )
 
         console = Console()
-        console.print(Text("Generated Testing Descriptor:", style="bold"))
+        console.print(Text("\nGenerated Testing Descriptor:", style="bold"))
 
         print(
             yaml.dump(
