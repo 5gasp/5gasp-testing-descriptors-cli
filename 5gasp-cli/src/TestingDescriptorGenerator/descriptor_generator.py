@@ -326,7 +326,7 @@ class TestingDescriptorGenerator:
         while not location_ok:
             info = Text()
             info.append("\nThe Testing Descriptor will be saved in the " +
-                        "folllowing file: ", style="bold")
+                        "following file: ", style="bold")
             info.append(self.output_filepath + "\n")
             console.print(info)
             change_filepath = Confirm.ask(
@@ -362,7 +362,7 @@ class TestingDescriptorGenerator:
 
             #info = Text()
             #info.append("\nThe Testing Descriptor will be saved in the " +
-            #            "folllowing file: ", style="bold")
+            #            "following file: ", style="bold")
             #info.append(self.output_filepath + "\n")
             #console.print(info)
         return True
