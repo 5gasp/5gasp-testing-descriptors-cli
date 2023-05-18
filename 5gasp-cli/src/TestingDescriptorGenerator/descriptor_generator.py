@@ -420,7 +420,7 @@ class TestingDescriptorGenerator:
 
         info = Text()
         info.append("\nThe Testing Descriptor was saved in the " +
-                    "folllowing file: ", style="bold")
+                    "following file: ", style="bold")
         info.append(self.output_filepath)
         console.print(info)
 
