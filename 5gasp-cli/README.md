@@ -49,3 +49,9 @@ This command has the following options:
 ```
 
 > **_NOTE:_** Both options can be used simultaneously
+
+## How to publish the package
+
+1. `poetry install -v`
+2. `poetry build`
+3. `poetry publish -u <pypi_account_username> -p <pypi_account_password>
