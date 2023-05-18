@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Eduardo Santos
 # @Date:   2023-04-03 23:41:36
-# @Last Modified by:   Eduardo Santos
-# @Last Modified time: 2023-05-18 17:50:52
+# @Last Modified by:   Rafael Direito
+# @Last Modified time: 2023-05-18 15:21:39
 
 # OS
 import os
@@ -380,6 +380,7 @@ class TestingDescriptorGenerator:
             tc_dict = {
                 "testcase_id": tc.test_case_id,
                 "type": tc.test.test_type,
+                "scope": tc.test.test_type,
                 "name": tc.test.id,
                 "description": tc.description,
                 "parameters": []

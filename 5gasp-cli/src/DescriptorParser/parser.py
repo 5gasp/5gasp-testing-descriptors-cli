@@ -2,7 +2,7 @@
 # @Author: Eduardo Santos
 # @Date:   2023-02-18 15:26:20
 # @Last Modified by:   Rafael Direito
-# @Last Modified time: 2023-04-26 23:35:08
+# @Last Modified time: 2023-05-18 14:53:36
 
 import yaml
 from typing import List
@@ -63,7 +63,8 @@ class ConnectionPointsParser:
                 for constituent_cpd in constituent["constituent-cpd-id"]:
                     interface_id = constituent_cpd['constituent-cpd-id']
                     connection_points.append(
-                        "{{" + f"{ns_id}|{vnf_id}|{interface_id}" + "}}"
+                        "{{deployment_info|" + f"{ns_id}|{vnf_id}|" +
+                        f"{interface_id}" + "}}"
                     )
         return connection_points
 
