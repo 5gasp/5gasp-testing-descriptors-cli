@@ -1,4 +1,12 @@
-# 5GASP CLI
+# 5GASP Testing Descriptors CLI
+
+The 5GASP Testing Descriptors CLI is a command-line interface designed to create 5GASP Testing Descriptors for Network Applications.
+
+## Provided Capabilities
+
+* List the 5GASP Testbeds
+* List the Available Tests
+* Create a Testing Descriptor
 
 ## How to run
 
