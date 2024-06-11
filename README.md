@@ -80,3 +80,7 @@ To build the documentation, run:
 Then, inside the same directory, open the **index.html** file:
 
     open _build/html/index.html
+
+## Authors
+* **Eduardo Santos**: [eduardosantoshf](https://github.com/eduardosantoshf)
+* **Rafael Direito**: [rafael-direito](https://github.com/rafael-direito)
